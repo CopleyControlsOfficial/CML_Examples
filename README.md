@@ -11,7 +11,7 @@ What is CML?
 CML Features:
 -	CML provides synchronization across CANopen or EtherCAT networks with Copley products. 
 	The applications are limitless as CML supports the maximum number of nodes per network as defined by the protocol standard: 
-		- 255 for CANopen networks
-		- 64,000 for EtherCAT networks
+	- 255 for CANopen networks
+	- 64,000 for EtherCAT networks
 -	Real-time messaging through synchronous PDO’s and asynchronous SDO’s.
 -	Linkage moves up to 32 axes of coordinated motion.
