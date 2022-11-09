@@ -1,11 +1,14 @@
-/** \file
+/*
+
+PvtFromCsvFile.cpp
 
 The following is an example of how to load PVT points from a CSV file. 
 The points are for a three axis network connected in a linkage. 
 
-The position data for each axis is stored in an CSV file. 
-The first row of the CSV file contains the names of each axis.
+The commanded position data for each axis is stored in an CSV file
+named "XyzPoints.csv."
 
+The first row of the CSV file contains the names of each axis.
 Example of CSV contents:
 
 Axis A Positions, Axis B Positions, Axis C Positions
