@@ -5,7 +5,7 @@ ME4Init.cpp
 The following is a simple example of how to initialize an ME4 drive on an EtherCAT network.
 Note: The p-loop and v-loop update rates of the ME3/ME4 drives are 2.5kHz (400 usec). The 
       EtherCAT loop update rate must be an integer multiple of this number. Therefore, a 
-	  value of 2ms must be configured for these drives using the AmpSettings object. 
+      value of 2ms must be configured for these drives using the AmpSettings object. 
 */
 
 // Comment this out to use EtherCAT
