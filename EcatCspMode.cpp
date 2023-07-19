@@ -2,6 +2,12 @@
 
 EcatCspMode.cpp
 
+NOTE: Please use a real-time operating system when running
+this example to ensure proper performance. If not using a 
+real-time OS, CSP mode is not recommended using CML. Instead,
+use TwinCAT or another software that includes low-level drivers
+for non-real-time operating systems. 
+
 The following example illustrates how to command a dual axis
 EtherCAT drive in CSP mode using fixed PDO's. 
 
