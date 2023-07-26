@@ -48,19 +48,22 @@ To run the example:
 6. Copy/paste the contents of the c and inc folders of CML (.h and .cpp files)
    into the following folder: ws_moveit2/src/hello_moveit/src/
 
-7. Rebuild the Colcon workspace:
+7. Replace the CMakeLists.txt file in the following folder: ws_moveit2/src/hello_moveit/
+   with the CMakeLists.txt file in this repository.
+
+8. Rebuild the Colcon workspace:
 
    cd ws_moveit2/
    colcon build --mixin debug ccache
 
-8. Start the node (robot) and visualize it using RVIZ by opening a separate 
+9. Start the node (robot) and visualize it using RVIZ by opening a separate 
    terminal, sourcing the ROS installation setup.bash (repeat step 2), then 
    running the python MoveIt2 tutorial program with:
    
    cd ws_moveit2/
    ros2 launch moveit2_tutorials demo.launch.py
 
-9. Start this example by opening another terminal, sourcing the ROS installation,
+10. Start this example by opening another terminal, sourcing the ROS installation,
    sourcing the MoveIt installation, and running the following commands:
 
    cd ws_moveit2/
