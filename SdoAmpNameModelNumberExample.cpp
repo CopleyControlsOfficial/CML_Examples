@@ -40,8 +40,8 @@ static void showerr(const Error* err, const char* str);
 
 /* local data */
 int32 canBPS = 1000000;             // CAN network bit rate
-const char* canDevice = "CAN0";           // Identifies the CAN device, if necessary
-int16 canNodeID = 1;                // CANopen node ID of first amp.  Second will be ID+1, etc.
+const char* canDevice = "CAN0";     // Identifies the CAN device, if necessary
+int16 canNodeID = 1;                // CANopen node ID of amp.
 
 // Function to return a vector of byte swapped characters from an array of bytes
 vector<char> GetAsciiCharactersFromByteArray(byte* byteArr, int size) {
@@ -65,10 +65,6 @@ vector<char> GetAsciiCharactersFromByteArray(byte* byteArr, int size) {
     return charVec;
 }
 
-/**************************************************
-* Just home the motor and do a bunch of random
-* moves.
-**************************************************/
 int main(void)
 {
     // The libraries define one global object of type
@@ -108,7 +104,7 @@ int main(void)
     err = amp.Init(net, canNodeID, ampSettingsObj);
     showerr(err, "Initting amp");
 
-    // Set the Trajectory Profile Mode (ASCII Parameter 0xc8) to 0x0100 (bit 8 set) = Relative Move
+    // 0x2000 is the serial-binary interface. Use this to read byte array types from the drive.
     int16 index = 0x2000;
     int16 subIndex = 0;
     int size = 3;
