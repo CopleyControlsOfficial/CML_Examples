@@ -1,9 +1,11 @@
 /*
 
-ProfileVelocityMode.cpp
+ProfilePositionSpecialVelocityMode.cpp
 
 The following is an example of a 3 node network.
-The 3 nodes will be jogged in Profile Velocity Mode.
+The 3 nodes will be jogged in Profile Position Special 
+Velocity Mode.
+
 The profile velocity parameter will be updated using
 RxPDO's. The actual position and velocity data from each
 node will be sent using TxPDO's and displayed to the 
