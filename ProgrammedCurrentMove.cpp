@@ -131,7 +131,7 @@ int main(void)
     err = amp[2].sdo.Dnld16(0x2300, 0, desiredStateProgCurrentMode);
     showerr(err, "setting desired state to programmed current mode");
 
-    short currentLoopProgrammedValue = 200; // 0.5 A 
+    short currentLoopProgrammedValue = 50; // 0.5 A 
     err = amp[2].sdo.Dnld16(0x2340, 0, currentLoopProgrammedValue);
     showerr(err, "setting current loop programmed value");
 
