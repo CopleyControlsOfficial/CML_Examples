@@ -191,7 +191,7 @@ public:
         // Let the various mapped variables know which 
         // objects in the amp's object dictionary they
         // are linked to.
-        if (!err) err = profilePosB.Init(OBJID_PROFILE_POS, 0);
+        if (!err) err = profilePosA.Init(OBJID_PROFILE_POS, 0);
         if (!err) err = profilePosB.Init(OBJID_PROFILE_POS + 0x800, 0);
 
         // Add the mapped variables
