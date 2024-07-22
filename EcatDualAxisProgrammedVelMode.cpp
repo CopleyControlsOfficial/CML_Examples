@@ -127,7 +127,7 @@ int main(void)
     showerr(err, "Opening CANopen network");
 
     // I'll use some custom amplifier settings, in particular
-    // I'll use a SYNC period of 1ms rather then the default 10ms
+    // I'll use a SYNC period of 10ms
     AmpSettings settings;
     settings.synchPeriod = 10000;
     settings.guardTime = 0;
@@ -166,12 +166,10 @@ int main(void)
 
     // In the main loop, I simply wait on an event which will occur when all my 
     // amplifiers have sent a position and velocity data update.  Once the data has been received,
-    // I will use them to calculate the next set of programmed velocities, which I will
-    // send out.
+    // I will send the next set of programmed velocities.
     for (int i = 0; i < 100; i++)
     {
-        // Clear the event mask.  Each amplifier will
-        // set it's own bit when it receives a data update.
+        // Clear the event mask.  The drive will set this to 1 when it updates CML with TPDO data.
         eventDataReceived.setMask(0);
 
         // Wait on this with a 2 second timeout.
@@ -184,8 +182,7 @@ int main(void)
         showerr(err, "Sending PDO");
     }
 
-    // Clear the event mask.  Each amplifier will
-    // set it's own bit when it receives a data update.
+    // Clear the event mask
     eventDataReceived.setMask(0);
 
     // Wait on this with a 2 second timeout.
@@ -198,8 +195,7 @@ int main(void)
     err = rpdo.Transmit(0, 0);
     showerr(err, "Sending PDO");
 
-    // Clear the event mask.  Each amplifier will
-    // set it's own bit when it receives a data update.
+    // Clear the event mask
     eventDataReceived.setMask(0);
 
     // Wait on this with a 2 second timeout.
@@ -225,8 +221,7 @@ int main(void)
  *
  * @param amp   The amplifier to map this PDO.
  * @param slot  The slot to use for this PDO.
- * @param m     The mask used to differentiate between axes.
- *              For example, axis A is 001, axis B is 010, axis C is 100, etc.
+ * @param inputMask     The mask indicating whether the TPDO data has been updated. This value is OR-ed with the EventMap by the TPDO thread when fresh data is received.
  * @return NULL on success, or an error object on failure.
  */
 const Error* TpdoEcatActVelActPosDualAxis::Init(Amp& amp, int slotNumber, int inputMask)
