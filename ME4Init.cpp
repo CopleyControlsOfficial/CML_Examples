@@ -68,7 +68,7 @@ int main(void)
 	Amp amp[4];
 	AmpSettings amp_settings;
 
-	// ME3/ME4 synchPeriod is 2000 ms (2 seconds)
+	// ME3/ME4 synchPeriod is 2000 usec (2 ms)
 	//amp_settings.enableOnInit = false;
 	amp_settings.synchPeriod = 2000;
 
