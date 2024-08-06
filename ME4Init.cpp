@@ -69,7 +69,6 @@ int main(void)
 	AmpSettings amp_settings;
 
 	// ME3/ME4 synchPeriod is 2000 usec (2 ms)
-	//amp_settings.enableOnInit = false;
 	amp_settings.synchPeriod = 2000;
 
 	// Initializing the first axis of a four axis drive
