@@ -45,10 +45,6 @@ static void showerr(const Error* err, const char* str);
 int32 canBPS = 1000000;             // CAN network bit rate
 int16 canNodeID = -1;                // CANopen node ID
 
-/**************************************************
-* Just home the motor and do a bunch of random
-* moves.
-**************************************************/
 int main(void)
 {
     // The libraries define one global object of type
