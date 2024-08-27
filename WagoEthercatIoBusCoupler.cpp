@@ -379,8 +379,8 @@ int main(void)
 
     int slotNum = rpdo1ObjIndex - rpdoBase;
 
-    // RPDO1 has a single-bit mapping inside of it so set 
-    // this property to false
+    // RPDO1 contains at least one object whose size is not a multiple of 8-bits.
+    // Therefore, set this property to false to bypass PDO verification
     rpdo1.SetVerifyFixedPdoMapping(false);
 
     err = wagoIoModuleObj.PdoSet(slotNum, rpdo1, true);
@@ -421,8 +421,8 @@ int main(void)
 
     slotNum = rpdo3ObjIndex - rpdoBase;
 
-    // RPDO3 has a single-bit mapping inside of it so set 
-    // this property to false
+    // RPDO3 contains at least one object whose size is not a multiple of 8-bits.
+    // Therefore, set this property to false to bypass PDO verification
     rpdo3.SetVerifyFixedPdoMapping(false);
 
     err = wagoIoModuleObj.PdoSet(slotNum, rpdo3, true);
@@ -446,8 +446,8 @@ int main(void)
 
     slotNum = tpdo1ObjIndex - tpdoBase;
 
-    // TPDO1 has a single-bit mapping inside of it so set 
-    // this property to false
+    // TPDO1 contains at least one object whose size is not a multiple of 8-bits.
+    // Therefore, set this property to false to bypass PDO verification
     tpdo1.SetVerifyFixedPdoMapping(false);
 
     err = wagoIoModuleObj.PdoSet(slotNum, tpdo1, true);
@@ -498,8 +498,8 @@ int main(void)
 
     slotNum = tpdo3ObjIndex - tpdoBase;
 
-    // TPDO3 has a single-bit mapping inside of it so set 
-    // this property to false
+    // TPDO3 contains at least one object whose size is not a multiple of 8-bits.
+    // Therefore, set this property to false to bypass PDO verification
     tpdo3.SetVerifyFixedPdoMapping(false);
 
     err = wagoIoModuleObj.PdoSet(slotNum, tpdo3, true);
