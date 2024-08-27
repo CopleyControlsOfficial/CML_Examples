@@ -60,8 +60,11 @@ Pmap16 object on each of these chunks, in order to get/set them.
 
 For a 16-bit chunk of data that contains a mix of single-bit objects, 
 (like RPDO1 in this example), set "pdo.SetVerifyFixedPdoMapping(false);" 
-so that CML does not attempt to change the fixed PDO mapping inside 
-the coupler.
+so that CML does not compare the PDO's currently mapped in the coupler
+with what is trying to be mapped. If CML performs this comparison and 
+there are differences found, CML will attempt to change the PDO mapping
+inside the coupler. The mapping in the coupler is fixed, so CML 
+should not attempt to change any PDO mapping. 
 
 In order to enable the module, please change the access of the 
 NodeWrite method in the EtherCAT class (CML_EtherCAT.h) to public 
@@ -507,28 +510,28 @@ int main(void)
     // get the first 16-bit chunk of RPDO data
     uint16 controlData = objectF200sub1.Read();
     cout << "Control Data: " << controlData << endl;
-    cout << "K-Bus Cycle Overrun Flag Disable: " << (controlData & 0x1) << endl;
-    cout << "Input Process Data Hold Request: " << ((controlData & 0x2) >> 1) << endl;
-    cout << "Output Process Data Hold Request: " << ((controlData & 0x4) >> 2) << endl;
-    cout << "Output Process Data Clear Request: " << ((controlData & 0x8) >> 3) << endl;
+    cout << "K-Bus Cycle Overrun Flag Disable (0xF200.1): " << (controlData & 0x1) << endl;
+    cout << "Input Process Data Hold Request (0xF200.2): " << ((controlData & 0x2) >> 1) << endl;
+    cout << "Output Process Data Hold Request (0xF200.3): " << ((controlData & 0x4) >> 2) << endl;
+    cout << "Output Process Data Clear Request (0xF200.4): " << ((controlData & 0x8) >> 3) << endl;
 
     // get the diagnostics control word, which is 16 bits in size
     uint16 diagnosticsControlWord = objectF200sub5.Read();
-    cout << "Diagnostics Control Word: " << diagnosticsControlWord << endl;
+    cout << "Diagnostics Control Word (0xF200.5): " << diagnosticsControlWord << endl;
 
     // set bits 0-3
     objectF200sub1.Write(0xF);
     controlData = objectF200sub1.Read();
     cout << "Control Data: " << controlData << endl;
-    cout << "K-Bus Cycle Overrun Flag Disable: " << (controlData & 0x1) << endl;
-    cout << "Input Process Data Hold Request: " << ((controlData & 0x2) >> 1) << endl;
-    cout << "Output Process Data Hold Request: " << ((controlData & 0x4) >> 2) << endl;
-    cout << "Output Process Data Clear Request: " << ((controlData & 0x8) >> 3) << endl;
+    cout << "K-Bus Cycle Overrun Flag Disable (0xF200.1): " << (controlData & 0x1) << endl;
+    cout << "Input Process Data Hold Request (0xF200.2): " << ((controlData & 0x2) >> 1) << endl;
+    cout << "Output Process Data Hold Request (0xF200.3): " << ((controlData & 0x4) >> 2) << endl;
+    cout << "Output Process Data Clear Request (0xF200.4): " << ((controlData & 0x8) >> 3) << endl;
 
     // get the input data for the first module
     for (int i = 0; i < 100; i++) 
     {
-        cout << "Input Data for Module 1: " << object6020sub1.Read() << endl;
+        cout << "Input Data for Module 1 (0x6020.1): " << object6020sub1.Read() << endl;
     }
 
     return 0;
