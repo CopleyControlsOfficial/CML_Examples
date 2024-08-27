@@ -54,17 +54,29 @@ TPDO4: 0x1b01 contains 1 objects.
 Object1: 0x0. Sub-index: 0. Size in bits: 12
 
 CML uses Pmap objects to get/set the bytes of the process image.
-Notice how the Wago EtherCAT I/O Bus Coupler divided the process
+Notice how the Wago EtherCAT I/O Bus Coupler divides the process
 image into 16-bit chunks. This makes it easy for CML to use a
 Pmap16 object on each of these chunks, in order to get/set them.
+If a PDO contains objects whose size is not a multiple of 8-bits,
+use the Pmap16 object to reference all the objects contained in 
+that first 16-bit section. 
 
-For a 16-bit chunk of data that contains a mix of single-bit objects, 
-(like RPDO1 in this example), set "pdo.SetVerifyFixedPdoMapping(false);" 
-so that CML does not compare the PDO's currently mapped in the coupler
-with what is trying to be mapped. If CML performs this comparison and 
-there are differences found, CML will attempt to change the PDO mapping
-inside the coupler. The mapping in the coupler is fixed, so CML 
-should not attempt to change any PDO mapping. 
+For example, the first 16-bits of RPDO 1 in this example contains 
+five objects. Use a Pmap16 object to get/set any of those five
+objects. Use bit masking/shifting to read/write their values. Initialize
+the Pmap16 object with the PDO entry that starts that 16-bit group.
+I.E. RPDO1 is 32-bits in size and is divided into two Pmap16 objects.
+The first Pmap16 object is initialized with 0xF200.1 and the next is
+initialized with 0xF200.5. 
+
+For a 16-bit chunk of data that contains an object that is not a 
+multiple of 8-bits, (like RPDO1 in this example), set 
+"pdo.SetVerifyFixedPdoMapping(false);" so that CML does not compare the 
+PDO's currently mapped in the coupler with what is trying to be mapped. 
+If CML performs this comparison and there are differences found, CML 
+will attempt to change the PDO mapping inside the coupler. The mapping 
+in the coupler is fixed, so CML should not attempt to change any PDO 
+mapping. 
 
 In order to enable the module, please change the access of the 
 NodeWrite method in the EtherCAT class (CML_EtherCAT.h) to public 
