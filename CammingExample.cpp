@@ -96,11 +96,11 @@ int main(void)
     //// 0x0f is the "trace command" op-code. 
     //// 0x0016 is the function code for downloading data in the trace buffer
     //// 0x0006 is the starting address for CAM TABLE 0
-    //// 0x000a is the size of CAM TABLE 0 in number of 16-bit words
+    //// 0x0005 is the number of entries in CAM TABLE 0
     //// 0x0010 is the starting address for CAM TABLE 1
-    //// 0x000a is the size of CAM TABLE 1 in number of 16-bit words
+    //// 0x0005 is the number of entries in CAM TABLE 1
     //// 0x001a is the starting address for CAM TABLE 2
-    //// 0x000a is the size of CAM TABLE 2 in number of 16-bit words
+    //// 0x0005 is the number of entries in CAM TABLE 2
     //// CAM TABLE 0
     //// (0x0064, 0x0001)
     //// (0x0063, 0x0002)
@@ -123,11 +123,11 @@ int main(void)
         0x0f, 
         0x16, 0x00, 
         0x06, 0x00, 
-        0x0a, 0x00, 
+        0x05, 0x00, 
         0x10, 0x00, 
-        0x0a, 0x00, 
+        0x05, 0x00, 
         0x1a, 0x00, 
-        0x0a, 0x00, 
+        0x05, 0x00, 
         0x64, 0x00, 0x01, 0x00,
         0x63, 0x00, 0x02, 0x00,
         0x62, 0x00, 0x03, 0x00,
