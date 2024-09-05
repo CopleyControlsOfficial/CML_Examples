@@ -23,7 +23,7 @@ Axis A Positions, Axis B Positions, Axis C Positions
 The PVT linkage will attempt to achieve these commanded positions
 using a PVT algorithm in the PvtConstAccelTrj class.
 
-The algorithm calculates velocities which will produce constant 
+The algorithm calculates velocities which will produce continuous 
 accel/decel values. The velocities are calculated using the 
 positions in the CSV file and the time between each PVT point.
 
