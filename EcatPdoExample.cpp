@@ -245,9 +245,6 @@ int main( void )
    auto err = hw.Open(); // maybe not needed
    showerr(err, "Opening ecat hardware");
 
-   CML::cml.SetLogFile("cml.log");
-   CML::cml.SetDebugLevel(CML::LOG_EVERYTHING);
-
    // Open the network object
 #if defined( USE_CAN )
    CanOpen net;
