@@ -260,11 +260,9 @@ int main( void )
 
    // Initialize the amplifier using default settings
    Amp ampArray[2];
-   AmpSettings ampSettings;
-   ampSettings.synchPeriod = 2000;
 
    printf( "Doing init\n" );
-   err = ampArray[0].Init(net, canNodeID, ampSettings);
+   err = ampArray[0].Init( net, canNodeID );
    showerr( err, "Initting XE2 axis A" );
    err = ampArray[1].InitSubAxis(ampArray[0], 2);
    showerr(err, "Initting XE2 axis B");
