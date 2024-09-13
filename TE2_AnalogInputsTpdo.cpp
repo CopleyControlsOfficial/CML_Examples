@@ -194,6 +194,19 @@ int main( void )
    analogInputsTpdo.display = false;
    CML::Thread::sleep(100);
 
+   int16 analogInputA;
+   int16 analogInputB; 
+
+   err = ampArray[0].sdo.Upld16( 0x2200, 0, analogInputA );
+   showerr( err, "reading analog input on Axis A" );
+
+   cout << "value of analog input axis A using SDO: " << analogInputA << endl;
+
+   err = ampArray[0].sdo.Upld16(0x2200 + 0x800, 0, analogInputB);
+   showerr(err, "reading analog input on Axis B");
+
+   cout << "value of analog input axis B using SDO: " << analogInputB << endl;
+
    return 0;
 }
 
