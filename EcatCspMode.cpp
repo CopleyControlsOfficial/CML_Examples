@@ -210,6 +210,8 @@ int main( int argc, char **argv )
    err = node.sdo.Dnld32( 0x6085, 0, (int32_t)65536 ); showerr( err, "Setting qstop decel" );
    err = node.sdo.Dnld16( 0x605D, 0, (int16_t)2 ); showerr( err, "Setting halt option" );
    err = node.sdo.Dnld16( 0x605A, 0, (int16_t)6 ); showerr( err, "Setting quickstop option" );
+   err = node.sdo.Dnld16( 0x1C32, 1, (int16_t)2 ); showerr( err, "Setting sync mngr2 config to DC mode with SYNC0 event" );
+   err = node.sdo.Dnld16( 0x1C33, 1, (int16_t)2 ); showerr( err, "Setting sync mngr3 config to DC mode with SYNC0 event" );
 
 //Halt Option Code (0x605D):  1;2
 //Quick Stop Option Code (0x605A): 0;1;2;5;6
