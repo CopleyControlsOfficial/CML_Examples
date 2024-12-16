@@ -131,7 +131,7 @@ const Error * NonFixedTpdoEventStatusAndOutputsXe2::Init( Amp &ampObj, int slotN
     const Error* err{ NULL };
 
     // Initialize the transmit PDO
-    // err = TPDO::Init(0x280 + slotNumber * 0x100 + ampObj.GetNodeID());
+    // err = TPDO::Init(0x180 + slotNumber * 0x100 + ampObj.GetNodeID());
 
     // Init the variables using the CANopen object ID 
     if (!err) err = eventStatusAxisA.Init(0x2185, 0);              //   32 bits
