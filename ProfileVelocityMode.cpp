@@ -45,8 +45,8 @@ void UpdateTargetVelocity(Amp* amp, int targetVelocity)
 }
 
 /**************************************************
-* Just home the motor and do a bunch of random
-* moves.
+* Start a profile velocity mode move, wait for 3 
+* seconds, then stop the move.
 **************************************************/
 int main(void)
 {
@@ -58,6 +58,10 @@ int main(void)
     // a log file for debugging
     cml.SetDebugLevel(LOG_EVERYTHING);
 
+    /* local data */
+    int32 canBPS = 1000000;             // CAN network bit rate
+    int16 canNodeID = -1;                // CANopen node ID
+    
     // Create an object used to access the low level CAN network.
     // This examples assumes that we're using the Copley PCI CAN card.
 #if defined( USE_CAN )
@@ -75,10 +79,6 @@ int main(void)
 #else
     EtherCAT net;
 #endif
-
-    /* local data */
-    int32 canBPS = 1000000;             // CAN network bit rate
-    int16 canNodeID = -1;                // CANopen node ID
 
     const Error* err = net.Open(hw);
     showerr(err, "Opening network");
