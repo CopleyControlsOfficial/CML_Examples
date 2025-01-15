@@ -6,6 +6,9 @@ Simple example of how to start and stop a Profile Velocity Mode move.
 
 */
 
+// Comment this out to use EtherCAT
+//#define USE_CAN
+
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -13,9 +16,6 @@ Simple example of how to start and stop a Profile Velocity Mode move.
 
 using std::cout;
 using std::endl;
-
-// Comment this out to use EtherCAT
-//#define USE_CAN
 
 #if defined( USE_CAN )
 #include "can/can_copley.h"
@@ -32,20 +32,8 @@ CML_NAMESPACE_USE();
 /* local functions */
 static void showerr(const Error* err, const char* str);
 
-/// <summary>
-/// Method to update the target velocity (0x60FF)
-/// </summary>
-/// <param name="amp">pointer to the amp object</param>
-void UpdateTargetVelocity(Amp* amp, int targetVelocity)
-{
-    int16 targetVelocityObjectIndex = 0x60FF;
-    int16 subIndex = 0;
-    const Error* err = (*amp).sdo.Dnld32(targetVelocityObjectIndex, subIndex, targetVelocity);
-    showerr(err, "setting the target velocity");
-}
-
 /**************************************************
-* Start a profile velocity mode move, wait for 3 
+* Start a profile velocity mode move, wait for 3
 * seconds, then stop the move.
 **************************************************/
 int main(void)
@@ -61,14 +49,15 @@ int main(void)
     /* local data */
     int32 canBPS = 1000000;             // CAN network bit rate
     int16 canNodeID = -1;                // CANopen node ID
-    
+
     // Create an object used to access the low level CAN network.
     // This examples assumes that we're using the Copley PCI CAN card.
 #if defined( USE_CAN )
     CopleyCAN hw("CAN0");
     hw.SetBaud(canBPS);
+    canNodeID = 1;
 #elif defined( WIN32 )
-    WinUdpEcatHardware hw("192.168.0.92");
+    WinUdpEcatHardware hw("192.168.0.205");
 #else
     LinuxEcatHardware hw("eth0");
 #endif
@@ -80,6 +69,9 @@ int main(void)
     EtherCAT net;
 #endif
 
+    AmpInfo test;
+    test.model;
+
     const Error* err = net.Open(hw);
     showerr(err, "Opening network");
 
@@ -89,22 +81,16 @@ int main(void)
     err = amp.Init(net, canNodeID);
     showerr(err, "Initting amp");
 
-    int16 modeOfOperation = 0x6060;
-    int16 subIndex = 0;
-    int8 profileVelocityMode = 3;
-    err = amp.sdo.Dnld8(modeOfOperation, subIndex, profileVelocityMode);
-    showerr(err, "setting mode of operation to profile velocity mode");
-
-    amp.SetProfileAcc(1000); // units are 10 counts/sec^2
-    amp.SetProfileDec(1000); // units are 10 counts/sec^2
-
+    err = amp.sdo.Dnld8(0x6060, 0, (int8)CML::AMPMODE_CAN_VELOCITY);
+    showerr(err, "setting mode of operation to profile velocity mode (mode 3)");
+    
     // set the target velocity to 1000 in units of 0.1 counts/sec
-    UpdateTargetVelocity(&amp, 1000);
+    amp.SetTargetVel(1000);
 
     CML::Thread::sleep(3000); // jog for 3 seconds. 
 
     // set the target velocity to zero, ending the move.
-    UpdateTargetVelocity(&amp, 0);
+    amp.SetTargetVel(0);
 
     printf("Profile Velocity Mode move complete.\n");
 
