@@ -83,6 +83,9 @@ int main(void)
 
     err = amp.sdo.Dnld8(0x6060, 0, (int8)CML::AMPMODE_CAN_VELOCITY);
     showerr(err, "setting mode of operation to profile velocity mode (mode 3)");
+
+    amp.SetProfileAcc(1000); // units are 10 counts/sec^2
+    amp.SetProfileDec(1000); // units are 10 counts/sec^2
     
     // set the target velocity to 1000 in units of 0.1 counts/sec
     amp.SetTargetVel(1000);
