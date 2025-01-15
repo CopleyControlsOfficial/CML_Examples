@@ -155,10 +155,8 @@ int main(void)
     const Error* err = net.Open(hw);
     showerr(err, "Opening CANopen network");
 
-    // I'll use some custom amplifier settings, in particular
-    // I'll use a SYNC period of 1ms rather then the default 10ms
+    // Set guard time to 0 to disable node guarding
     AmpSettings settings;
-    settings.synchPeriod = 10000;
     settings.guardTime = 0;
 
     for (int i = 0; i < numberOfAxes; i++)
