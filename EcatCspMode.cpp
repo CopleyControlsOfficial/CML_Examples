@@ -217,8 +217,10 @@ int main( int argc, char **argv )
 //Quick Stop Option Code (0x605A): 0;1;2;5;6
 
 
-   printf( "Setting PVT period\n" );
-   err = node.sdo.Dnld8( 0x60c2, 1, (int8)1 );
+   printf( "Setting PVT period to 3 * 10^-3 seconds = 3 milliseconds\n" );
+   err = node.sdo.Dnld8( 0x60c2, 1, (int8)3 );
+   showerr( err, "Setting PVT period" );
+   err = node.sdo.Dnld8( 0x60c2, 2, (int8)-3 );
    showerr( err, "Setting PVT period" );
 
    if( axisCt > 1 )
@@ -233,7 +235,9 @@ int main( int argc, char **argv )
       err = node.sdo.Dnld8( 0x6860, 0, (int8)8 );
       showerr( err, "Setting mode" );
       
-      err = node.sdo.Dnld8( 0x68c2, 1, (int8)1 );
+      err = node.sdo.Dnld8( 0x68c2, 1, (int8)3 );
+      showerr( err, "Setting PVT period" );
+      err = node.sdo.Dnld8( 0x68c2, 2, (int8)-3 );
       showerr( err, "Setting PVT period" );
    }
 
