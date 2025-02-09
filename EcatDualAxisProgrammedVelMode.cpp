@@ -274,7 +274,7 @@ const Error* RpdoEcatProgrammedVelocityDualAxis::Init(Amp& amp, uint16 slotNumbe
     networkReference = amp.GetNetworkRef();
 
     // Init the base class
-    const Error* err = RPDO::Init(0x200 + slotNumber * 0x100 + amp.GetNodeID()); //0x200+slot*0x100+amp.GetNodeID() );
+    const Error* err = RPDO::Init(0x200 + slotNumber * 0x100 + amp.GetNodeID());
 
     // Init the mapping objects that describe the data mapped to this PDO
     if (!err) err = programmedVelocityAxisA.Init(OBJID_PROG_VEL);
