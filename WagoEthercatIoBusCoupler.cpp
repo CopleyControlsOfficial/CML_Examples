@@ -156,6 +156,29 @@ public:
     int pMapRpdoCount = 0;
     int pMapTpdoCount = 0;
 
+    uint16 tpdoProcessImageSizeBytes = 0;
+    uint16 rpdoProcessImageSizeBytes = 0;
+    byte tpdoCount = 0;
+    byte rpdoCount = 0;
+    vector<uint16> rpdoObjIndexVec;
+    vector<uint16> tpdoObjIndexVec;
+
+    int tpdoCounter = 0;
+    int rpdoCounter = 0;
+
+    TPDO tpdoArr[MAX_PDOS];
+    RPDO rpdoArr[MAX_PDOS];
+
+    struct PMap16Info {
+        uint16 index;
+        byte subIndex;
+        int slotNum;
+        bool containsSingleBitMapping;
+    };
+
+    vector<PMap16Info> pMapInfoVecInputs;
+    vector<PMap16Info> pMapInfoVecOutputs;
+
     WagoIoModule()
     {
         this->isSm2RdOnly = true;
@@ -230,9 +253,9 @@ public:
 
                 // bits 0-7
                 byte sizeInBits = var & 0xFF;
-                
+
                 // contains objects that are not a multiple of 8-bits.
-                if (sizeInBits & 0x07) 
+                if (sizeInBits & 0x07)
                 {
                     containsSingleBitMapping = true;
                 }
@@ -257,11 +280,11 @@ public:
                     newPdoInfoObj.subIndex = subIndex;
                     newPdoInfoObj.slotNum = rpdoObjIndexVec[t] - 0x1600;
 
-                    if ( containsSingleBitMapping ) 
+                    if (containsSingleBitMapping)
                     {
                         newPdoInfoObj.containsSingleBitMapping = true;
                     }
-                    else 
+                    else
                     {
                         newPdoInfoObj.containsSingleBitMapping = false;
                     }
@@ -352,14 +375,14 @@ public:
             }
         }
 
-        tpdoProcessImageSizeBytes = ( tpdoBitsTotal >> 3 );
+        tpdoProcessImageSizeBytes = (tpdoBitsTotal >> 3);
 
         int y = 0;
-        while (y < (int)pMapInfoVecOutputs.size()) 
+        while (y < (int)pMapInfoVecOutputs.size())
         {
             int slotNum = pMapInfoVecOutputs[y].slotNum;
             if (pMapInfoVecOutputs[y].containsSingleBitMapping) { rpdoArr[rpdoCounter].SetVerifyFixedPdoMapping(false); }
-            
+
             err = pMap16OutArr[pMapRpdoCount].Init(pMapInfoVecOutputs[y].index, pMapInfoVecOutputs[y].subIndex);
             if (err) { return err; }
 
@@ -368,15 +391,15 @@ public:
 
             // create PMap16 objects, map them to PDO's, and insert them into their PMap16 vectors for later use
             int u = y + 1;
-            for( u = y + 1; u < (int)pMapInfoVecOutputs.size(); u++ )
+            for (u = y + 1; u < (int)pMapInfoVecOutputs.size(); u++)
             {
-                if (pMapInfoVecOutputs[u].slotNum != pMapInfoVecOutputs[u - 1].slotNum) 
+                if (pMapInfoVecOutputs[u].slotNum != pMapInfoVecOutputs[u - 1].slotNum)
                 {
                     break;
                 }
 
                 if (pMapInfoVecOutputs[u].containsSingleBitMapping) { rpdoArr[rpdoCounter].SetVerifyFixedPdoMapping(false); }
-                                
+
                 err = pMap16OutArr[pMapRpdoCount].Init(pMapInfoVecOutputs[u].index, pMapInfoVecOutputs[u].subIndex);
                 if (err) { return err; }
 
@@ -384,9 +407,9 @@ public:
                 if (err) { return err; }
             }
 
-            err = this->PdoSet( slotNum, rpdoArr[rpdoCounter++], true );
+            err = this->PdoSet(slotNum, rpdoArr[rpdoCounter++], true);
             if (err) { return err; }
-            
+
             y = u;
         }
 
@@ -451,31 +474,12 @@ public:
         byte sm3ConfigArr[8] = { 0x00, 0x24, ByteCast(tpdoProcessImageSizeBytes), ByteCast(tpdoProcessImageSizeBytes >> 8), 0x00, 0x00, 0x01, 0x00 };
         err = net.NodeWrite(this, 0x818, 8, sm3ConfigArr);
         return err;
+
+        this->SynchStart();
     }
 
 private:
-    uint16 tpdoProcessImageSizeBytes = 0;
-    uint16 rpdoProcessImageSizeBytes = 0;
-    byte tpdoCount = 0;
-    byte rpdoCount = 0;
-    vector<uint16> rpdoObjIndexVec;
-    vector<uint16> tpdoObjIndexVec;
 
-    int tpdoCounter = 0;
-    int rpdoCounter = 0;
-
-    TPDO tpdoArr[MAX_PDOS];
-    RPDO rpdoArr[MAX_PDOS];
-
-    struct PMap16Info {
-        uint16 index;
-        byte subIndex;
-        int slotNum;
-        bool containsSingleBitMapping;
-    };
-
-    vector<PMap16Info> pMapInfoVecInputs;
-    vector<PMap16Info> pMapInfoVecOutputs;
 };
 
 int main(void)
@@ -494,7 +498,7 @@ int main(void)
     CopleyCAN hw("CAN0");
     hw.SetBaud(canBPS);
 #elif defined( WIN32 )
-    WinUdpEcatHardware hw("192.168.0.40");
+    WinUdpEcatHardware hw("192.168.0.92");
 #else
     LinuxEcatHardware hw("eth0");
 #endif
@@ -505,7 +509,12 @@ int main(void)
 #else
     EtherCAT net;
 #endif
-    const Error* err = net.Open(hw);
+
+    EtherCatSettings ecatSettingsObj;
+
+    ecatSettingsObj.cyclePeriod = 20;
+
+    const Error* err = net.Open(hw, ecatSettingsObj);
     showerr(err, "Opening network");
 
     // Initialize the amplifier using default settings
@@ -543,6 +552,31 @@ int main(void)
     for (int i = 0; i < wagoIoModuleObj.pMapTpdoCount; i++)
     {
         cout << (int)wagoIoModuleObj.pMap16InArr[i].Read() << endl;
+    }
+
+    while (1) {
+
+        uint16 value = wagoIoModuleObj.pMap16OutArr[2].Read();
+        cout << (int)value << endl;
+
+        wagoIoModuleObj.pMap16OutArr[2].Write(0x000F);
+
+        err = net.XmitPDO(&wagoIoModuleObj.rpdoArr[1],-1);
+        showerr(err, "transmitting RPDO 2");
+
+        err = net.WaitCycleUpdate(-1);
+        showerr(err, "waiting for cycle update");
+
+        value = wagoIoModuleObj.pMap16OutArr[2].Read();
+        cout << (int)value << endl;
+        
+        wagoIoModuleObj.pMap16OutArr[2].Write(0x0000);
+
+        err = net.XmitPDO(&wagoIoModuleObj.rpdoArr[1], -1);
+        showerr(err, "transmitting RPDO 2");
+
+        err = net.WaitCycleUpdate(-1);
+        showerr(err, "waiting for cycle update");
     }
 
     return 0;
