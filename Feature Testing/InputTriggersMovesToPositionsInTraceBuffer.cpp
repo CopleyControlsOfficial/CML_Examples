@@ -12,6 +12,9 @@ CVM Registers are configured as:
 (3) head pointer
 (4) tail pointer
 
+IN1 triggers Axis A. IN2 triggers Axis B. IN3 triggers Axis C. 
+Wire all three inputs together to move all three axes at the same time. 
+
 */
 
 // Comment this out to use EtherCAT
