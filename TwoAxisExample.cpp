@@ -27,7 +27,6 @@ Simple example of a two axis system using a linkage object.
 CML_NAMESPACE_USE();
 
 /* local functions */
-static int RunTest( void );
 static void showerr( const Error *err, const char *str );
 
 /* local defines */
