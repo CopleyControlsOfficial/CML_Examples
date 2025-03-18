@@ -133,6 +133,12 @@ int main(void)
     err = amp[0].sdo.Dnld16(traceBufferReserveSizeObjIndx, subIndex, numberOf16BitWords);
     showerr(err, "reserving space in the trace buffer");
 
+    int16 traceBufferPointer = 0x250B;
+    subIndex = 0;
+    uint16 offset = 0;
+    err = amp[0].sdo.Dnld16(traceBufferPointer, subIndex, offset);
+    showerr(err, "reseting the trace buffer pointer to zero (start of buffer)");
+
     // send all the position data 
     int16 traceMemoryIndex = 0x250C;
     subIndex = 0;
