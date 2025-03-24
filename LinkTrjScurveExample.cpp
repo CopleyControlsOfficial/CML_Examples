@@ -204,7 +204,7 @@ int main(void)
     Point<AMPCT> targetPosition;
     for (int i = 0; i < AMPCT; i++) 
     {
-        targetPosition[i] = -2000.0 - (i * 10000.0); 
+        targetPosition[i] = 2000.0 + (i * 10000.0); 
     }
 
     LinkTrjScurve linkTrjScurveObj;
