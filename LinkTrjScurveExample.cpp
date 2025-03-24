@@ -225,7 +225,7 @@ int main(void)
     vector<vector<double>> alteredPositionsVec;
     vector<uint8> alteredTimesVec;
 
-    // break the trajectory into 5ms segments
+    // break the trajectory into 20ms segments
     for (int i = 0; i < (int)positionsVec.size(); i++) 
     {
         // append the original position
