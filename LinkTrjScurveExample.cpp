@@ -121,10 +121,6 @@ void ExtractTrajectoryFromScurveObject(LinkTrjScurve& linkScurveObj, vector<vect
     }
 }
 
-/**************************************************
-* Just home the motor and do a bunch of random
-* moves.
-**************************************************/
 int main(void)
 {
     // The libraries define one global object of type
