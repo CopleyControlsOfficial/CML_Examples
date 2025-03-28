@@ -3,29 +3,29 @@
 LinkTrjScurveExample.cpp
 
 This is an example of how to use a LinkTrjScurve class to calculate a linkage
-trajectory and extract the trajectory data. The data can be altered and then 
-streamed in a PVT stream using the PvtConstAccelTrj class. 
+trajectory and extract the trajectory data. The data can be altered and then
+streamed in a PVT stream using the PvtConstAccelTrj class.
 
 The s-curve trajectory in this example is altered on the fly during the move
 by doubling the time value in the PVT stream.
 
 Below are the steps performed in this example:
 
-1) The LinkTrjScurve class is used to calculate positions and times for 
-the s-curve move. 
+1) The LinkTrjScurve class is used to calculate positions and times for
+the s-curve move.
 
-2) The position data is injected with more position data to provide more 
-resolution for the stream. We want the list of position data to be roughly 20 
-milliseconds apart. 
+2) The position data is injected with more position data to provide more
+resolution for the stream. We want the list of position data to be roughly 20
+milliseconds apart.
 
 3) The position data is smoothed 100 times using a simple smoothing algorithm.
 
-4) The PVT data is loaded into the PvtConstAccelTrj class, and the linkage move 
-is started. 
+4) The PVT data is loaded into the PvtConstAccelTrj class, and the linkage move
+is started.
 
 5) At the halfway point, the time value is altered dynamically in the PVT stream.
 
-6) Link.WaitMoveDone will wait for the move to complete. 
+6) Link.WaitMoveDone will wait for the move to complete.
 
 */
 
@@ -71,9 +71,9 @@ const int hardwareBufferMaxPoints = 64; // max size of the PVT buffer in the dri
 /// Smooth the position data.
 /// </summary>
 /// <param name="vecIn"></param>
-void SmoothPositionProfile(vector<vector<double>>& vecIn) 
+void SmoothPositionProfile(vector<vector<double>>& vecIn)
 {
-    for (int i = 1; i < (int)vecIn.size() - 1; i++) 
+    for (int i = 1; i < (int)vecIn.size() - 1; i++)
     {
         for (int j = 0; j < (int)vecIn[0].size(); j++)
         {
@@ -110,7 +110,7 @@ void ExtractTrajectoryFromScurveObject(LinkTrjScurve& linkScurveObj, vector<vect
         vector<double> posTempVec;
         vector<double> velTempVec;
 
-        for (int i = 0; i < AMPCT; i++) 
+        for (int i = 0; i < AMPCT; i++)
         {
             posTempVec.push_back(posTemp[i]);
             velTempVec.push_back(velTemp[i]);
@@ -119,6 +119,34 @@ void ExtractTrajectoryFromScurveObject(LinkTrjScurve& linkScurveObj, vector<vect
         (*positions).push_back(posTempVec);
         (*times).push_back(timeConstant);
     }
+}
+
+/// <summary>
+/// Update the linkage trajectory s-curve object with the user units of each amp object
+/// </summary>
+/// <param name="linkTrjScurveIn">The linkage trajector s-curve object</param>
+/// <param name="ampArr">The array of amplifier objects</param>
+/// <param name="ampCount">The number of amplifiers in the array</param>
+/// <returns></returns>
+void UpdateLinkTrjScurveUserUnits(LinkTrjScurve& linkTrjScurveIn, Amp* ampArr, int ampCount) 
+{
+    const int ampCountTemp = ampCount;
+    uunit* u2lPosArr = new uunit[ampCountTemp];
+    uunit* u2lVelArr = new uunit[ampCountTemp];
+
+    // get the latest user-units from each amplifier in the linkage
+    for (int i = 0; i < ampCountTemp; i++) 
+    {
+        u2lPosArr[i] = ampArr[i].PosUser2Load(1);   // 1 counts units
+        u2lVelArr[i] = ampArr[i].VelUser2Load(0.1); // 0.1 counts/sec units
+    }
+
+
+    // provide the user units to the LinkTrjScurve class
+    linkTrjScurveIn.UpdateUserToLoadUnitConverters(u2lPosArr, u2lVelArr);
+
+    delete[] u2lPosArr;
+    delete[] u2lVelArr;
 }
 
 int main(void)
@@ -162,10 +190,18 @@ int main(void)
         printf("Initing %d\n", canNodeID + i);
         err = amp[i].Init(net, canNodeID + i);
         showerr(err, "Initting amp");
+
+        MtrInfo mtrInfo;
+        err = amp[i].GetMtrInfo(mtrInfo);
+        showerr(err, "Getting motor info\n");
+
+        // configuring non-default user units. user unit value of 1.0 will be equal to 1 motor rev.
+        err = amp[i].SetCountsPerUnit(mtrInfo.ctsPerRev);
+        showerr(err, "Setting cpr\n");
     }
 
     // Set the position to zero on all axes. Just used for testing this example. Remove in production.
-    for (int i = 0; i < AMPCT; i++) 
+    for (int i = 0; i < AMPCT; i++)
     {
         amp[i].SetPositionActual(0);
     }
@@ -182,10 +218,10 @@ int main(void)
     // set the number of points to keep in the drive's buffer
     pvtObj.maxBufferPoints = hardwareBufferMaxPoints;
 
-    double velocity = 50000.0; // this is the max velocity achievable for the system. 
-    double accel = 50000.0;
-    double decel = 50000.0;
-    double jerk =  500000.0;
+    double velocity = 2.0; // this is the max velocity achievable for the system in terms of user units. 
+    double accel = 2.0;
+    double decel = 2.0;
+    double jerk = 20.0;
 
     // Setup the velocity, acceleration, deceleration & jerk limits
     // for multi-axis moves using the linkage object
@@ -198,47 +234,51 @@ int main(void)
 
     // Create an arbitrary N dimensional target position.
     Point<AMPCT> targetPosition;
-    for (int i = 0; i < AMPCT; i++) 
+    for (int i = 0; i < AMPCT; i++)
     {
-        targetPosition[i] = 2000.0 + (i * 10000.0); 
+        targetPosition[i] = 2.0 + (i * 0.3);
     }
 
     LinkTrjScurve linkTrjScurveObj;
+
     err = linkTrjScurveObj.Calculate(startPos, targetPosition, velocity, accel, decel, jerk);
     showerr(err, "calculating trajectory");
 
     err = linkTrjScurveObj.StartNew();
     showerr(err, "starting trajectory");
 
+    UpdateLinkTrjScurveUserUnits(linkTrjScurveObj, amp, AMPCT);
+
     vector<vector<double>> positionsVec;
     vector<uint8> timesVec;
 
     // reads all positions and times from s-curve object
-    ExtractTrajectoryFromScurveObject(linkTrjScurveObj, &positionsVec, &timesVec); 
-    
+    ExtractTrajectoryFromScurveObject(linkTrjScurveObj, &positionsVec, &timesVec);
+
     uint8 alteredTimeConstant = 20; // 20 millisecond chunks
 
     vector<vector<double>> alteredPositionsVec;
     vector<uint8> alteredTimesVec;
 
     // break the trajectory into 20ms segments
-    for (int i = 0; i < (int)positionsVec.size(); i++) 
+    for (int i = 0; i < (int)positionsVec.size(); i++)
     {
         // append the original position
         alteredPositionsVec.push_back(positionsVec[i]);
-        if (timesVec[i] < alteredTimeConstant) 
+        if (timesVec[i] < alteredTimeConstant)
         {
             alteredTimesVec.push_back(timesVec[i]);
             continue;
         }
-        else 
+        else
         {
             alteredTimesVec.push_back(alteredTimeConstant);
         }
-        
+
         // do not inject any positions if this is the last position (target)
         if (i < (int)positionsVec.size() - 1)
         {
+            // the number of points to inject 
             int injectionFactor = (timesVec[i] / alteredTimeConstant) - 1;
 
             for (int t = 1; t <= injectionFactor; t++)
@@ -257,13 +297,13 @@ int main(void)
             }
         }
     }
-    
+
     // smooth the profile 100 times. 
-    for (int i = 0; i < 100; i++) 
+    for (int i = 0; i < 100; i++)
     {
         SmoothPositionProfile(alteredPositionsVec);
     }
-    
+
     //for (int i = 0; i < (int)alteredPositionsVec.size(); i++) 
     //{
     //    cout << (double)alteredPositionsVec[i][0] << endl;
@@ -276,7 +316,7 @@ int main(void)
     while (((int)pvtObj.getNumberOfPvtPoints() < softwareBufferMaxPoints) && (count < (int)alteredPositionsVec.size()))
     {
         vector<double>posTempVec;
-        for (int j = 0; j < AMPCT; j++) 
+        for (int j = 0; j < AMPCT; j++)
         {
             posTempVec.push_back(alteredPositionsVec[count][j]);
         }
@@ -307,7 +347,7 @@ int main(void)
             uint8 timeConstant = alteredTimesVec[count];
 
             // slow down the move (alter it on the fly)
-            if (count >= halfwayPoint) 
+            if (count >= halfwayPoint)
             {
                 timeConstant *= 2;
             }
