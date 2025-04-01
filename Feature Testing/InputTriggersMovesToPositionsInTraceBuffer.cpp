@@ -4,7 +4,7 @@ InputTriggersMovesToPositionsInTraceBuffer.cpp
 
 Below is an example of how to load positions into the drive's
 trace buffer and use an input(s) to trigger the move to each
-position. 
+position.
 
 CVM Registers are configured as:
 (1) offset into table
@@ -12,8 +12,8 @@ CVM Registers are configured as:
 (3) head pointer
 (4) tail pointer
 
-IN1 triggers Axis A. IN2 triggers Axis B. IN3 triggers Axis C. 
-Wire all three inputs together to move all three axes at the same time. 
+IN1 triggers Axis A. IN2 triggers Axis B. IN3 triggers Axis C.
+Wire all three inputs together to move all three axes at the same time.
 
 */
 
@@ -76,11 +76,26 @@ int main(void)
 #endif
 
     const int axisNum = 3;
-    int pointsPerAxis = 5;
+    int bufferSizePerAxis = 5;
+    int pointsPerAxis = 10;
 
+    int axisAOffset = 0;
+    int axisBOffset = bufferSizePerAxis;
+    int axisCOffset = bufferSizePerAxis * 2;
+
+    int headPointerA = bufferSizePerAxis - 1;
+    int headPointerB = bufferSizePerAxis - 1;
+    int headPointerC = bufferSizePerAxis - 1;
+
+    // stores the positions to travel to.
     vector<int> axisAPosVec;
     vector<int> axisBPosVec;
     vector<int> axisCPosVec;
+
+    // keeps track of the points we already sent.
+    int countA = 0;
+    int countB = 0; 
+    int countC = 0;
 
     // These are the positions that I want each axis to travel to. 
     for (int i = 0; i < pointsPerAxis; i++)
@@ -93,11 +108,10 @@ int main(void)
     // Append the last position at the end of the vector again so that we travel there. 
     // Otherwise, the head and tail pointer will match at the last point and not actually
     // travel to it. 
-    axisAPosVec.push_back(axisAPosVec[(int)axisAPosVec.size() - 1]);
-    axisBPosVec.push_back(axisBPosVec[(int)axisBPosVec.size() - 1]);
-    axisCPosVec.push_back(axisCPosVec[(int)axisCPosVec.size() - 1]);
-
-    pointsPerAxis = (int)axisAPosVec.size();
+    //axisAPosVec.push_back(axisAPosVec[(int)axisAPosVec.size() - 1]);
+    //axisBPosVec.push_back(axisBPosVec[(int)axisBPosVec.size() - 1]);
+    //axisCPosVec.push_back(axisCPosVec[(int)axisCPosVec.size() - 1]);
+    //pointsPerAxis++;
 
     const Error* err = net.Open(hw);
     showerr(err, "Opening network");
@@ -129,7 +143,7 @@ int main(void)
     // The ME3 has 3 axes. So that's 1500 / 3 = 500 positions per axis. 
     int16 traceBufferReserveSizeObjIndx = 0x250A;
     uint16 subIndex = 0;
-    uint16 numberOf16BitWords = pointsPerAxis * 2 * axisNum;
+    uint16 numberOf16BitWords = bufferSizePerAxis * 2 * axisNum;
     err = amp[0].sdo.Dnld16(traceBufferReserveSizeObjIndx, subIndex, numberOf16BitWords);
     showerr(err, "reserving space in the trace buffer");
 
@@ -143,41 +157,53 @@ int main(void)
     int16 traceMemoryIndex = 0x250C;
     subIndex = 0;
 
-    for (int i = 0; i < (int)axisAPosVec.size(); i++)
+    // Fill up the buffers for each axis.
+    int initialFill = 0;
+    if (pointsPerAxis >= bufferSizePerAxis) 
     {
-        err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisAPosVec[i]);
-        showerr(err, "sending positions to trace buffer");
+        initialFill = bufferSizePerAxis;
+    }
+    else 
+    {
+        initialFill = pointsPerAxis;
     }
 
-    for (int i = 0; i < (int)axisBPosVec.size(); i++)
+    for (int i = 0; i < initialFill; i++)
     {
-        err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisBPosVec[i]);
-        showerr(err, "sending positions to trace buffer");
+        err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisAPosVec[countA]);
+        showerr(err, "sending positions for axis A to trace buffer");
+        countA++;
     }
 
-    for (int i = 0; i < (int)axisCPosVec.size(); i++)
+    for (int i = 0; i < initialFill; i++)
     {
-        err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisCPosVec[i]);
-        showerr(err, "sending positions to trace buffer");
+        err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisBPosVec[countB]);
+        showerr(err, "sending positions for axis B to trace buffer");
+        countB++;
+    }
+
+    for (int i = 0; i < initialFill; i++)
+    {
+        err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisCPosVec[countC]);
+        showerr(err, "sending positions for axis C to trace buffer");
+        countC++;
     }
 
     // R0 = offset into the buffer for the start of this table in units of 32-bit positions.
     int16 cvmRegisterIndex = 0x2600;
     subIndex = 1; // R0
-    int offsetIntoTable = 0;
-    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, offsetIntoTable);
+    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, axisAOffset);
     showerr(err, "setting the offset for table 1");
 
     // R1 = length of table for axis A
     subIndex = 2; // R1
-    int lengthOfTable = pointsPerAxis;
+    int lengthOfTable = bufferSizePerAxis;
     err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, lengthOfTable);
     showerr(err, "setting the length of table 1 in units of 32-bit positions");
 
     // R2 = head pointer. 
     subIndex = 3; // R2
-    int headPointer = pointsPerAxis - 1;
-    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, headPointer);
+    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, headPointerA);
     showerr(err, "setting the head pointer for table 1");
 
     // R3 = tail pointer. 
@@ -188,20 +214,18 @@ int main(void)
 
     // R4 = offset into the buffer for the start of this table in units of 32-bit positions.
     subIndex = 5; // R4
-    offsetIntoTable = pointsPerAxis;
-    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, offsetIntoTable);
+    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, axisBOffset);
     showerr(err, "setting the offset for table 2");
 
     // R5 = length of table for axis B
     subIndex = 6; // R5
-    lengthOfTable = pointsPerAxis;
+    lengthOfTable = bufferSizePerAxis;
     err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, lengthOfTable);
     showerr(err, "setting the length of table 2 in units of 32-bit positions");
 
     // R6 = head pointer. 
     subIndex = 7; // R6
-    headPointer = pointsPerAxis - 1;
-    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, headPointer);
+    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, headPointerB);
     showerr(err, "setting the head pointer for table 2");
 
     // R7 = tail pointer. 
@@ -212,20 +236,18 @@ int main(void)
 
     // R8 = offset into the buffer for the start of this table in units of 32-bit positions.
     subIndex = 9; // R8
-    offsetIntoTable = pointsPerAxis * 2;
-    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, offsetIntoTable);
+    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, axisCOffset);
     showerr(err, "setting the offset for table 3");
 
     // R9 = length of table for axis C
     subIndex = 10; // R9
-    lengthOfTable = pointsPerAxis;
+    lengthOfTable = bufferSizePerAxis;
     err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, lengthOfTable);
     showerr(err, "setting the length of table 3 in units of 32-bit positions");
 
     // R10 = head pointer. 
     subIndex = 11; // R10
-    headPointer = pointsPerAxis - 1;
-    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, headPointer);
+    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, headPointerC);
     showerr(err, "setting the head pointer for table 3");
 
     // R11 = tail pointer. 
@@ -251,6 +273,276 @@ int main(void)
     err = amp[0].sdo.Dnld16(digitalInputConfigIndex, subIndex, configValue);
     showerr(err, "configuring IN3");
 
+    bool axisADone = false;
+    if (countA == (int)axisAPosVec.size()) 
+    {
+        axisADone = true;
+    }
+
+    bool axisBDone = false;
+    if (countB == (int)axisBPosVec.size())
+    {
+        axisBDone = true;
+    }
+
+    bool axisCDone = false;
+    if (countC == (int)axisCPosVec.size())
+    {
+        axisCDone = true;
+    }
+
+    // R3 = tail pointer. 
+    subIndex = 4; // R3
+    int tailPointer1_Old = 0;
+    err = amp[0].sdo.Upld32(cvmRegisterIndex, subIndex, tailPointer1_Old);
+    showerr(err, "reading the tail pointer for table 1");
+
+    // R7 = tail pointer. 
+    subIndex = 8; // R7
+    int tailPointer2_Old = 0;
+    err = amp[0].sdo.Upld32(cvmRegisterIndex, subIndex, tailPointer2_Old);
+    showerr(err, "reading the tail pointer for table 2");
+
+    // R11 = tail pointer. 
+    subIndex = 12; // R11
+    int tailPointer3_Old = 0;
+    err = amp[0].sdo.Upld32(cvmRegisterIndex, subIndex, tailPointer3_Old);
+    showerr(err, "reading the tail pointer for table 3");
+
+    bool lastPointA = false;
+    bool lastPointB = false;
+    bool lastPointC = false;
+
+    // send the rest of the points if there are any left to send
+    while ((axisADone == false) || (axisBDone == false) || (axisCDone == false)) 
+    {
+        // R3 = tail pointer. 
+        subIndex = 4; // R3
+        int tailPointer1_New = 0;
+        err = amp[0].sdo.Upld32(cvmRegisterIndex, subIndex, tailPointer1_New);
+        showerr(err, "reading the tail pointer for table 1");
+
+        // R7 = tail pointer. 
+        subIndex = 8; // R7
+        int tailPointer2_New = 0;
+        err = amp[0].sdo.Upld32(cvmRegisterIndex, subIndex, tailPointer2_New);
+        showerr(err, "reading the tail pointer for table 2");
+
+        // R11 = tail pointer. 
+        subIndex = 12; // R11
+        int tailPointer3_New = 0;
+        err = amp[0].sdo.Upld32(cvmRegisterIndex, subIndex, tailPointer3_New);
+        showerr(err, "reading the tail pointer for table 3");
+
+        // firmware incremented the tail pointer. Therefore, there is a free slot available
+        // in the trace buffer. Let's go fill it!
+        if ((tailPointer1_New != tailPointer1_Old) && (axisADone == false)) 
+        {
+            // if we are not sending the last point, use this loop
+            if (lastPointA == false) 
+            {
+                // use a while loop because there could be more than one open slot available
+                while ((tailPointer1_Old != tailPointer1_New) && (lastPointA == false))
+                {
+                    // travel to the open slot
+                    tailPointer1_Old++;
+                    tailPointer1_Old %= bufferSizePerAxis;
+
+                    headPointerA++;
+                    headPointerA %= bufferSizePerAxis;
+
+                    // R2 = head pointer. 
+                    subIndex = 3; // R2
+                    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, headPointerA);
+                    showerr(err, "setting the head pointer for table 1");
+
+                    // fill the open slot
+
+                    // set the pointer (address) into the trace buffer
+                    subIndex = 0;
+                    offset = (axisAOffset * 2) + (headPointerA * 2);
+                    err = amp[0].sdo.Dnld16(traceBufferPointer, subIndex, offset);
+                    showerr(err, "setting the trace buffer pointer for axis A");
+
+                    // send the position (value) in the trace buffer
+                    err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisAPosVec[countA]);
+                    showerr(err, "sending positions for axis A to trace buffer");
+                    countA++;
+
+                    if (countA == (int)axisAPosVec.size()) 
+                    { 
+                        countA--;
+                        lastPointA = true;
+                    }
+                }
+            }
+            // we are sending the last point (twice because we want to travel to it).
+            else 
+            {
+                headPointerA++;
+                headPointerA %= bufferSizePerAxis;
+
+                // R2 = head pointer. 
+                subIndex = 3; // R2
+                err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, headPointerA);
+                showerr(err, "setting the head pointer for table 1");
+
+                // fill the open slot
+
+                // set the pointer (address) into the trace buffer
+                subIndex = 0;
+                offset = (axisAOffset * 2) + (headPointerA * 2);
+                err = amp[0].sdo.Dnld16(traceBufferPointer, subIndex, offset);
+                showerr(err, "setting the trace buffer pointer for axis A");
+
+                // send the position (value) in the trace buffer
+                err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisAPosVec[countA]);
+                showerr(err, "sending positions for axis A to trace buffer");
+
+                axisADone = true;
+            }
+        }
+
+        // firmware incremented the tail pointer. Therefore, there is a free slot available
+        // in the trace buffer. Let's go fill it!
+        if ((tailPointer2_New != tailPointer2_Old) && (axisBDone == false))
+        {
+            // if we are not sending the last point, use this loop
+            if (lastPointB == false)
+            {
+                // use a while loop because there could be more than one open slot available
+                while ((tailPointer2_Old != tailPointer2_New) && (lastPointB == false))
+                {
+                    // travel to the open slot
+                    tailPointer2_Old++;
+                    tailPointer2_Old %= bufferSizePerAxis;
+
+                    headPointerB++;
+                    headPointerB %= bufferSizePerAxis;
+
+                    // R6 = head pointer. 
+                    subIndex = 7; // R6
+                    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, headPointerB);
+                    showerr(err, "setting the head pointer for table 2");
+
+                    // fill the open slot
+
+                    // set the pointer (address) into the trace buffer
+                    subIndex = 0;
+                    offset = (axisBOffset * 2) + (headPointerB * 2);
+                    err = amp[0].sdo.Dnld16(traceBufferPointer, subIndex, offset);
+                    showerr(err, "setting the trace buffer pointer for axis B");
+
+                    // send the position (value) in the trace buffer
+                    err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisBPosVec[countB]);
+                    showerr(err, "sending positions for axis B to trace buffer");
+                    countB++;
+
+                    if (countB == (int)axisBPosVec.size())
+                    {
+                        countB--;
+                        lastPointB = true;
+                    }
+                }
+            }
+            // we are sending the last point (twice because we want to travel to it).
+            else
+            {
+                headPointerB++;
+                headPointerB %= bufferSizePerAxis;
+
+                // R6 = head pointer. 
+                subIndex = 7; // R6
+                err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, headPointerB);
+                showerr(err, "setting the head pointer for table 2");
+
+                // fill the open slot
+
+                // set the pointer (address) into the trace buffer
+                subIndex = 0;
+                offset = (axisBOffset * 2) + (headPointerB * 2);
+                err = amp[0].sdo.Dnld16(traceBufferPointer, subIndex, offset);
+                showerr(err, "setting the trace buffer pointer for axis B");
+
+                // send the position (value) in the trace buffer
+                err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisBPosVec[countB]);
+                showerr(err, "sending positions for axis B to trace buffer");
+
+                axisBDone = true;
+            }
+        }
+
+        // firmware incremented the tail pointer. Therefore, there is a free slot available
+        // in the trace buffer. Let's go fill it!
+        if ((tailPointer3_New != tailPointer3_Old) && (axisCDone == false))
+        {
+            // if we are not sending the last point, use this loop
+            if (lastPointC == false)
+            {
+                // use a while loop because there could be more than one open slot available
+                while ((tailPointer3_Old != tailPointer3_New) && (lastPointC == false))
+                {
+                    // travel to the open slot
+                    tailPointer3_Old++;
+                    tailPointer3_Old %= bufferSizePerAxis;
+
+                    headPointerC++;
+                    headPointerC %= bufferSizePerAxis;
+
+                    // R10 = head pointer. 
+                    subIndex = 11; // R10
+                    err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, headPointerC);
+                    showerr(err, "setting the head pointer for table 3");
+
+                    // fill the open slot
+
+                    // set the pointer (address) into the trace buffer
+                    subIndex = 0;
+                    offset = (axisCOffset * 2) + (headPointerC * 2);
+                    err = amp[0].sdo.Dnld16(traceBufferPointer, subIndex, offset);
+                    showerr(err, "setting the trace buffer pointer for axis C");
+
+                    // send the position (value) in the trace buffer
+                    err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisCPosVec[countC]);
+                    showerr(err, "sending positions for axis C to trace buffer");
+                    countC++;
+
+                    if (countC == (int)axisCPosVec.size())
+                    {
+                        countC--;
+                        lastPointC = true;
+                    }
+                }
+            }
+            // we are sending the last point (twice because we want to travel to it).
+            else
+            {
+                headPointerC++;
+                headPointerC %= bufferSizePerAxis;
+
+                // R10 = head pointer. 
+                subIndex = 11; // R10
+                err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, headPointerC);
+                showerr(err, "setting the head pointer for table 3");
+
+                // fill the open slot
+
+                // set the pointer (address) into the trace buffer
+                subIndex = 0;
+                offset = (axisCOffset * 2) + (headPointerC * 2);
+                err = amp[0].sdo.Dnld16(traceBufferPointer, subIndex, offset);
+                showerr(err, "setting the trace buffer pointer for axis C");
+
+                // send the position (value) in the trace buffer
+                err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisCPosVec[countC]);
+                showerr(err, "sending positions for axis C to trace buffer");
+
+                axisCDone = true;
+            }
+        }
+    }
+
+    printf("\nDone! All data loaded into trace buffer.\n");
     getchar();
 
     return 0;
