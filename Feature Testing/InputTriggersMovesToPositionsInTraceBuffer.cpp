@@ -105,14 +105,6 @@ int main(void)
         axisCPosVec.push_back(i * 30);
     }
 
-    // Append the last position at the end of the vector again so that we travel there. 
-    // Otherwise, the head and tail pointer will match at the last point and not actually
-    // travel to it. 
-    //axisAPosVec.push_back(axisAPosVec[(int)axisAPosVec.size() - 1]);
-    //axisBPosVec.push_back(axisBPosVec[(int)axisBPosVec.size() - 1]);
-    //axisCPosVec.push_back(axisCPosVec[(int)axisCPosVec.size() - 1]);
-    //pointsPerAxis++;
-
     const Error* err = net.Open(hw);
     showerr(err, "Opening network");
 
