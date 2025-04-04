@@ -76,7 +76,7 @@ int main(void)
 #endif
 
     const int axisNum = 3;
-    int bufferSizePerAxis = 5;
+    int bufferSizePerAxis = 15;
     int pointsPerAxis = 10;
 
     int axisAOffset = 0;
@@ -149,15 +149,36 @@ int main(void)
     int16 traceMemoryIndex = 0x250C;
     subIndex = 0;
 
+    bool allPointsFitInBuffer = false;
+
     // Fill up the buffers for each axis.
     int initialFill = 0;
-    if (pointsPerAxis >= bufferSizePerAxis) 
+
+    // Determine if all the positions will fit into the buffer. If they do fit, 
+    // then we use pointsPerAxis + 1 because we are going to append the last 
+    // position twice so that we actually travel to it. Otherwise head and tail 
+    // pointer are equal at the last point, and we wouldn't actually travel to it.
+    // If the positions do not fit in the buffer, then a special algorithm is used
+    // to monitor the buffer and fill the empty slots as they become available
+    // during the move.
+    if (pointsPerAxis + 1 > bufferSizePerAxis) 
     {
         initialFill = bufferSizePerAxis;
     }
     else 
     {
+        allPointsFitInBuffer = true;
         initialFill = pointsPerAxis;
+    }
+
+    if (allPointsFitInBuffer) 
+    {
+        headPointerA = pointsPerAxis;
+        headPointerB = pointsPerAxis;
+        headPointerC = pointsPerAxis;
+        axisAOffset = 0;
+        axisBOffset = pointsPerAxis + 1;
+        axisCOffset = (pointsPerAxis + 1) * 2;
     }
 
     for (int i = 0; i < initialFill; i++)
@@ -165,6 +186,15 @@ int main(void)
         err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisAPosVec[countA]);
         showerr(err, "sending positions for axis A to trace buffer");
         countA++;
+
+        // send the last point twice if all points fit in buffer. This is so that we actually travel to the last point. 
+        if ((i == initialFill - 1) && (allPointsFitInBuffer == true))
+        {
+            countA--;
+            err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisAPosVec[countA]);
+            showerr(err, "sending positions for axis A to trace buffer");
+            countA++;
+        }
     }
 
     for (int i = 0; i < initialFill; i++)
@@ -172,6 +202,15 @@ int main(void)
         err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisBPosVec[countB]);
         showerr(err, "sending positions for axis B to trace buffer");
         countB++;
+
+        // send the last point twice if all points fit in buffer. This is so that we actually travel to the last point. 
+        if ((i == initialFill - 1) && (allPointsFitInBuffer == true))
+        {
+            countB--;
+            err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisBPosVec[countB]);
+            showerr(err, "sending positions for axis B to trace buffer");
+            countB++;
+        }
     }
 
     for (int i = 0; i < initialFill; i++)
@@ -179,6 +218,15 @@ int main(void)
         err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisCPosVec[countC]);
         showerr(err, "sending positions for axis C to trace buffer");
         countC++;
+
+        // send the last point twice if all points fit in buffer. This is so that we actually travel to the last point. 
+        if ((i == initialFill - 1) && (allPointsFitInBuffer == true))
+        {
+            countC--;
+            err = amp[0].sdo.Dnld32(traceMemoryIndex, subIndex, axisCPosVec[countC]);
+            showerr(err, "sending positions for axis C to trace buffer");
+            countC++;
+        }
     }
 
     // R0 = offset into the buffer for the start of this table in units of 32-bit positions.
@@ -190,6 +238,15 @@ int main(void)
     // R1 = length of table for axis A
     subIndex = 2; // R1
     int lengthOfTable = bufferSizePerAxis;
+
+    // adjust the length of the table because we are not using the entire buffer. It's pointsPerAxis + 1 because
+    // we had to add the last point twice to actually travel there. Otherwise head and tail pointer are equal 
+    // at the last point, and we wouldn't actually travel to it. 
+    if (allPointsFitInBuffer == true) 
+    {
+        lengthOfTable = pointsPerAxis + 1;
+    }
+
     err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, lengthOfTable);
     showerr(err, "setting the length of table 1 in units of 32-bit positions");
 
@@ -211,7 +268,6 @@ int main(void)
 
     // R5 = length of table for axis B
     subIndex = 6; // R5
-    lengthOfTable = bufferSizePerAxis;
     err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, lengthOfTable);
     showerr(err, "setting the length of table 2 in units of 32-bit positions");
 
@@ -233,7 +289,6 @@ int main(void)
 
     // R9 = length of table for axis C
     subIndex = 10; // R9
-    lengthOfTable = bufferSizePerAxis;
     err = amp[0].sdo.Dnld32(cvmRegisterIndex, subIndex, lengthOfTable);
     showerr(err, "setting the length of table 3 in units of 32-bit positions");
 
