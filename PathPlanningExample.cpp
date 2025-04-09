@@ -151,8 +151,6 @@ int main(void)
 
 	err = path.StartNew(); showerr(err, "Start new");
 
-	path.Reset();
-
 	ofstream excelFile;
 	excelFile.open("PositionData.csv");
 	excelFile << "X Coordinate,Y Coordinate\n";
