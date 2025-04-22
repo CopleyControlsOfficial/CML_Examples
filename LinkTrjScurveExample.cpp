@@ -141,7 +141,6 @@ void UpdateLinkTrjScurveUserUnits(LinkTrjScurve& linkTrjScurveIn, Amp* ampArr, i
         u2lVelArr[i] = ampArr[i].VelUser2Load(0.1); // 0.1 counts/sec units
     }
 
-
     // provide the user units to the LinkTrjScurve class
     linkTrjScurveIn.UpdateUserToLoadUnitConverters(u2lPosArr, u2lVelArr);
 
@@ -219,9 +218,9 @@ int main(void)
     pvtObj.maxBufferPoints = hardwareBufferMaxPoints;
 
     double velocity = 2.0; // this is the max velocity achievable for the system in terms of user units. 
-    double accel = 2.0;
-    double decel = 2.0;
-    double jerk = 20.0;
+    double accel = 20.0;
+    double decel = 20.0;
+    double jerk = 200.0;
 
     // Setup the velocity, acceleration, deceleration & jerk limits
     // for multi-axis moves using the linkage object
@@ -255,6 +254,16 @@ int main(void)
     // reads all positions and times from s-curve object
     ExtractTrajectoryFromScurveObject(linkTrjScurveObj, &positionsVec, &timesVec);
 
+    for (int i = 0; i < (int)positionsVec[0].size(); i++)
+    {
+        for (int j = 0; j < (int)positionsVec.size(); j++) 
+        {
+            cout << (double)positionsVec[j][i] << endl;
+        }
+
+        cout << "Next Amp" << endl;
+    }
+
     uint8 alteredTimeConstant = 20; // 20 millisecond chunks
 
     vector<vector<double>> alteredPositionsVec;
@@ -265,11 +274,20 @@ int main(void)
     {
         // append the original position
         alteredPositionsVec.push_back(positionsVec[i]);
-        if (timesVec[i] < alteredTimeConstant)
+
+        // if the time is zero, it's the last PVT point. Use the altered time constant.
+        if (timesVec[i] == 0) 
+        {
+            alteredTimesVec.push_back(alteredTimeConstant);
+            continue;
+        }
+        // if the time is non-zero but less than the altered time constant, use it and continue (do not inject any additional positions).
+        else if (timesVec[i] < alteredTimeConstant)
         {
             alteredTimesVec.push_back(timesVec[i]);
             continue;
         }
+        // the time value is larger than the altered time value. Therefore, we can inject smaller positions into the trajectory.
         else
         {
             alteredTimesVec.push_back(alteredTimeConstant);
@@ -298,16 +316,27 @@ int main(void)
         }
     }
 
+    // add the last position (target) again
+    alteredPositionsVec.push_back(positionsVec[positionsVec.size() - 1]);
+
+    // set the last time to zero (end of move)
+    alteredTimesVec.push_back(0);
+
     // smooth the profile 100 times. 
     for (int i = 0; i < 100; i++)
     {
         SmoothPositionProfile(alteredPositionsVec);
     }
 
-    //for (int i = 0; i < (int)alteredPositionsVec.size(); i++) 
-    //{
-    //    cout << (double)alteredPositionsVec[i][0] << endl;
-    //}
+    for (int i = 0; i < (int)alteredPositionsVec[0].size(); i++)
+    {
+        for (int j = 0; j < (int)alteredPositionsVec.size(); j++)
+        {
+            cout << (double)alteredPositionsVec[j][i] << endl;
+        }
+
+        cout << "Altered Next Amp" << endl;
+    }
 
     int count = 0;
     int halfwayPoint = (int)alteredPositionsVec.size() / 2;
