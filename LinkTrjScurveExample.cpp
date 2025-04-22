@@ -316,14 +316,8 @@ int main(void)
         }
     }
 
-    // add the last position (target) again
-    alteredPositionsVec.push_back(positionsVec[positionsVec.size() - 1]);
-
-    // set the last time to zero (end of move)
-    alteredTimesVec.push_back(0);
-
-    // smooth the profile 100 times. 
-    for (int i = 0; i < 100; i++)
+    // smooth the profile 10 times. 
+    for (int i = 0; i < 10; i++)
     {
         SmoothPositionProfile(alteredPositionsVec);
     }
