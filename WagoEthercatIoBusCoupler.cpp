@@ -473,9 +473,17 @@ public:
         // set sm3 (inputs)
         byte sm3ConfigArr[8] = { 0x00, 0x24, ByteCast(tpdoProcessImageSizeBytes), ByteCast(tpdoProcessImageSizeBytes >> 8), 0x00, 0x00, 0x01, 0x00 };
         err = net.NodeWrite(this, 0x818, 8, sm3ConfigArr);
-        return err;
+        if (err) { return err; }
 
-        this->SynchStart();
+        // set the watchdog divisor to its reset value (0x09c2)
+        uint16 resetWdDivisorValue = 0x09c2;
+        err = net.NodeWrite(this, 0x400, 2, &resetWdDivisorValue);
+        if (err) { return err; }
+
+        // set the watchdog timeout value to its reset value (0x03e8)
+        uint16 resetWdTimeoutValue = 0x03e8;
+        err = net.NodeWrite(this, 0x420, 2, &resetWdTimeoutValue);
+        return err;
     }
 
 private:
@@ -519,7 +527,7 @@ int main(void)
 
     // Initialize the amplifier using default settings
     WagoIoModule wagoIoModuleObj;
-    int16 etherCatNodeID = -1;        // EtherCAT node ID
+    int16 etherCatNodeID = -2;        // EtherCAT node ID
     err = wagoIoModuleObj.Init(net, etherCatNodeID);
     showerr(err, "Initializing I/O module\n");
 
@@ -561,7 +569,7 @@ int main(void)
 
         wagoIoModuleObj.pMap16OutArr[2].Write(0x000F);
 
-        err = net.XmitPDO(&wagoIoModuleObj.rpdoArr[1],-1);
+        err = net.XmitPDO(&wagoIoModuleObj.rpdoArr[1], -1);
         showerr(err, "transmitting RPDO 2");
 
         err = net.WaitCycleUpdate(-1);
@@ -569,7 +577,7 @@ int main(void)
 
         value = wagoIoModuleObj.pMap16OutArr[2].Read();
         cout << (int)value << endl;
-        
+
         wagoIoModuleObj.pMap16OutArr[2].Write(0x0000);
 
         err = net.XmitPDO(&wagoIoModuleObj.rpdoArr[1], -1);
