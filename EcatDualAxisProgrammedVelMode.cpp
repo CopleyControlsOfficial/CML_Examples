@@ -126,10 +126,8 @@ int main(void)
     const Error* err = net.Open(hw);
     showerr(err, "Opening CANopen network");
 
-    // I'll use some custom amplifier settings, in particular
-    // I'll use a SYNC period of 10ms
+    // I'll use some custom amplifier settings
     AmpSettings settings;
-    settings.synchPeriod = 10000;
     settings.guardTime = 0;
 
     // Initializing the first axis
