@@ -69,9 +69,6 @@ int main(void)
     EtherCAT net;
 #endif
 
-    AmpInfo test;
-    test.model;
-
     const Error* err = net.Open(hw);
     showerr(err, "Opening network");
 
