@@ -2,7 +2,7 @@
 
 CombineScurveMoves.cpp
 
-The following example demonstrats how to combine two 
+The following example demonstrates how to combine two 
 s-curve moves using PVT streaming. 
 
 */
@@ -252,4 +252,5 @@ static void showerr(const Error* err, const char* str)
         printf("Error %s: %s\n", str, err->toString());
         exit(1);
     }
+
 }
