@@ -3,7 +3,18 @@
 ProfilePositionMode.cpp
 Trapezoidal moves.  Update the Target Position (0x607a) using an RPDO. 
 Trapezoidal moves support dynamic trajectory updating.  This means that the move
-will update to a new target position even if the previous move was not complete.
+will update to a new target position even if the previous move was not completed.
+
+The RPDO contains Target Position (0x607a) and Control Word (0x6040), which is
+mapped twice. 
+
+RPDO: [ Target Position (0x607a), Control Word (0x6040), Control Word (0x6040) ]
+
+The first instance of the Control Word is set to 0x002F, and the second instance
+of the Control Word is set to 0x003F. The drive processes each object in the PDO
+in the order they are mapped.  This means that we can update the trajectory using
+only one RPDO.  This maximizes efficiency and removes any latency in setting the 
+Control Word (updating the trajectory). 
 
 */
 
@@ -209,4 +220,5 @@ static void showerr(const Error* err, const char* str)
         printf("Error %s: %s\n", str, err->toString());
         exit(1);
     }
+
 }
