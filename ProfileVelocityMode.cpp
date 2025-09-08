@@ -78,7 +78,7 @@ int main(void)
     err = amp.Init(net, canNodeID);
     showerr(err, "Initting amp");
 
-    err = amp.sdo.Dnld8(0x6060, 0, (int8)CML::AMPMODE_CAN_VELOCITY);
+    err = amp.SetAmpMode(AMPMODE_CAN_VELOCITY);
     showerr(err, "setting mode of operation to profile velocity mode (mode 3)");
 
     amp.SetProfileAcc(1000); // units are 10 counts/sec^2
@@ -107,3 +107,4 @@ static void showerr(const Error* err, const char* str)
         exit(1);
     }
 }
+
