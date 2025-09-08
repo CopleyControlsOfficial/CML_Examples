@@ -3,7 +3,7 @@
 ProgrammedCurrentMove.cpp
 
 The following program demonstrates one way of performing the
-sequence of events shown below on axis C of an MP4 drive:
+sequence of events shown below on a Copley Controls drive:
 
 1) Initiate a programmed current move
 2) Wait for 100 milliseconds
@@ -36,7 +36,7 @@ static void showerr(const Error* err, const char* str);
 
 /* local data */
 int32 canBPS = 1000000;             // CAN network bit rate
-int16 canNodeID = 1;                // CANopen node ID
+int16 canNodeID = -1;                // CANopen node ID
 
 /**************************************************
 * Just home the motor and do a bunch of random
@@ -55,6 +55,7 @@ int main(void)
     // Create an object used to access the low level CAN network.
     // This examples assumes that we're using the Copley PCI CAN card.
 #if defined( USE_CAN )
+    canNodeID = 1;
     CopleyCAN hw("CAN0");
     hw.SetBaud(canBPS);
 #elif defined( WIN32 )
@@ -70,103 +71,49 @@ int main(void)
     EtherCAT net;
 #endif
 
-    AmpInfo test;
-    test.model;
-
     const Error* err = net.Open(hw);
     showerr(err, "Opening network");
 
     // Initialize the amplifiers using default settings
-    Amp amp[4];
-
-#if defined( USE_CAN )
-    // Initializing the first axis of a four axis drive
-    printf("Initing axis %d\n", 1);
-    err = amp[0].Init(net, canNodeID);
-    showerr(err, "Initing axis a");
-
-    // Initializing the second axis of a four axis drive
-    printf("Initing axis %d\n", 2);
-    err = amp[1].Init(net, canNodeID + 1);
-    showerr(err, "Initing axis b");
-
-    // Initializing the third axis of a four axis drive
-    printf("Initing axis %d\n", 3);
-    err = amp[2].Init(net, canNodeID + 2);
-    showerr(err, "Initing axis c");
-
-    // Initializing the fourth axis of a four axis drive
-    printf("Initing axis %d\n", 4);
-    err = amp[3].Init(net, canNodeID + 3);
-    showerr(err, "Initing axis d");
-#else
-    AmpSettings amp_settings;
-
-    // ME3/ME4 synchPeriod is 2000 ms (2 seconds)
-    //amp_settings.enableOnInit = false;
-    amp_settings.synchPeriod = 2000;
+    Amp amp;
 
     // Initializing the first axis of a four axis drive
     printf("Initing axis %d\n", 1);
-    err = amp[0].Init(net, -1, amp_settings); // address is -1 for first drive on EtherCAT Network
+    err = amp.Init(net, canNodeID);
     showerr(err, "Initing axis a");
 
-    // Initializing the second axis of a four axis drive
-    printf("Initing axis %d\n", 2);
-    err = amp[1].InitSubAxis(amp[0], 2);
-    showerr(err, "Initing axis b");
-
-    // Initializing the third axis of a four axis drive
-    printf("Initing axis %d\n", 3);
-    err = amp[2].InitSubAxis(amp[0], 3);
-    showerr(err, "Initing axis c");
-
-    // Initializing the fourth axis of a four axis drive
-    printf("Initing axis %d\n", 4);
-    err = amp[3].InitSubAxis(amp[0], 4);
-    showerr(err, "Initing axis d");
-#endif
-
-    short desiredStateProgCurrentMode = 1;
-    err = amp[2].sdo.Dnld16(0x2300, 0, desiredStateProgCurrentMode);
+    err = amp.SetAmpMode(AMPMODE_PROG_CRNT);
     showerr(err, "setting desired state to programmed current mode");
 
-    short currentLoopProgrammedValue = 50; // 0.5 A 
-    err = amp[2].sdo.Dnld16(0x2340, 0, currentLoopProgrammedValue);
+    short currentLoopProgrammedValue = 5; // 0.05 A 
+    err = amp.sdo.Dnld16(OBJID_PROG_CRNT, 0, currentLoopProgrammedValue);
     showerr(err, "setting current loop programmed value");
 
     short currentLoopSlopeValue = 0;
-    err = amp[2].sdo.Dnld32(0x2113, 0, currentLoopSlopeValue);
+    err = amp.sdo.Dnld32(OBJID_CRNT_SLOPE, 0, currentLoopSlopeValue);
     showerr(err, "setting the current loop slope value");
 
     short currentLoopOffset;
-    err = amp[2].sdo.Upld16(0x60F6, 3, currentLoopOffset);
+    err = amp.sdo.Upld16(OBJID_CRNTLOOP, 3, currentLoopOffset);
     showerr(err, "getting the current loop offset");
 
     short commandedCurrent;
-    err = amp[2].sdo.Upld16(0x221D, 0, commandedCurrent);
+    err = amp.sdo.Upld16(OBJID_CRNT_CMD, 0, commandedCurrent);
     showerr(err, "getting the commanded current");
 
     // wait for at commanded current
-    while (commandedCurrent < currentLoopOffset + currentLoopProgrammedValue) 
+    while (commandedCurrent < currentLoopOffset + currentLoopProgrammedValue)
     {
-        err = amp[2].sdo.Upld16(0x221D, 0, commandedCurrent);
+        err = amp.sdo.Upld16(OBJID_CRNT_CMD, 0, commandedCurrent);
         showerr(err, "getting the commanded current");
     }
 
-    // wait for a delay time 100 milliseconds
-    CML::Thread::sleep(100);
+    // wait for a delay time 3000 milliseconds
+    CML::Thread::sleep(3000);
 
-    int actualVelocity;
-    err = amp[2].sdo.Upld32(0x6069, 0, actualVelocity);
-    showerr(err, "getting the actual velocity");
-
-    // wait for actual velocity to be less than or equal to 5
-    while (actualVelocity > 5) 
-    {
-        err = amp[2].sdo.Upld32(0x6069, 0, actualVelocity);
-        showerr(err, "getting the actual velocity");
-    }
+    currentLoopProgrammedValue = 0;
+    err = amp.sdo.Dnld16(OBJID_PROG_CRNT, 0, currentLoopProgrammedValue);
+    showerr(err, "setting programming current to zero amps, ending move");
 
     printf("Program finished. Hit enter to quit\n");
     getchar();
