@@ -78,7 +78,7 @@ int main(void)
     err = amp.Init(net, canNodeID);
     showerr(err, "Initting amp");
 
-    err = amp.sdo.Dnld8(0x6060, 0, (int8)CML::AMPMODE_CAN_TORQUE);
+    err = amp.SetAmpMode(AMPMODE_CAN_TORQUE);
     showerr(err, "setting mode of operation to profile torque mode (mode 4)");
 
     // The rate of change specified in thousandths of the total rated torque
@@ -112,3 +112,4 @@ static void showerr(const Error* err, const char* str)
         exit(1);
     }
 }
+
