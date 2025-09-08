@@ -6,8 +6,9 @@ The following program demonstrates one way of performing the
 sequence of events shown below on a Copley Controls drive:
 
 1) Initiate a programmed current move
-2) Wait for 100 milliseconds
-3) Wait for the actual velocity to be below a specific value.
+2) Wait for "at commanded current"
+3) Wait for 3 seconds
+4) End the programmed current move
 
 */
 
@@ -131,3 +132,4 @@ static void showerr(const Error* err, const char* str)
         exit(1);
     }
 }
+
