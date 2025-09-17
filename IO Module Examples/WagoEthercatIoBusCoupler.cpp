@@ -550,6 +550,11 @@ int main(void)
     err = wagoIoModuleObj.StartNode();
     showerr(err, "Starting node");
 
+    // set the watchdog timeout to a larger value (200ms) 
+    uint16 increasedWdTimeoutValue = 0x07d0; // 0x07d0 = 2000 = 200 ms
+    err = net.NodeWrite(&wagoIoModuleObj, 0x420, 2, &increasedWdTimeoutValue);
+    showerr(err, "setting watchdog timer value to larger value of 200ms");
+
     cout << "Reading Outputs" << endl;
     for (int i = 0; i < wagoIoModuleObj.pMapRpdoCount; i++)
     {
@@ -561,11 +566,6 @@ int main(void)
     {
         cout << (int)wagoIoModuleObj.pMap16InArr[i].Read() << endl;
     }
-
-    // set the watchdog timeout to a larger value (200ms) 
-    uint16 increasedWdTimeoutValue = 0x07d0; // 0x07d0 = 2000 = 200 ms
-    err = net.NodeWrite(&wagoIoModuleObj, 0x420, 2, &increasedWdTimeoutValue);
-    showerr(err, "setting watchdog timer value to larger value of 200ms");
 
     while (1) {
 
@@ -605,3 +605,4 @@ static void showerr(const Error* err, const char* str)
         exit(1);
     }
 }
+
