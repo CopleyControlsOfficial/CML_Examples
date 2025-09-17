@@ -506,7 +506,7 @@ int main(void)
     CopleyCAN hw("CAN0");
     hw.SetBaud(canBPS);
 #elif defined( WIN32 )
-    WinUdpEcatHardware hw("192.168.0.92");
+    WinUdpEcatHardware hw("192.168.0.85");
 #else
     LinuxEcatHardware hw("eth0");
 #endif
@@ -527,7 +527,7 @@ int main(void)
 
     // Initialize the amplifier using default settings
     WagoIoModule wagoIoModuleObj;
-    int16 etherCatNodeID = -2;        // EtherCAT node ID
+    int16 etherCatNodeID = -1;        // EtherCAT node ID
     err = wagoIoModuleObj.Init(net, etherCatNodeID);
     showerr(err, "Initializing I/O module\n");
 
@@ -561,6 +561,11 @@ int main(void)
     {
         cout << (int)wagoIoModuleObj.pMap16InArr[i].Read() << endl;
     }
+
+    // set the watchdog timeout to a larger value (200ms) 
+    uint16 increasedWdTimeoutValue = 0x07d0; // 0x07d0 = 2000 = 200 ms
+    err = net.NodeWrite(&wagoIoModuleObj, 0x420, 2, &increasedWdTimeoutValue);
+    showerr(err, "setting watchdog timer value to larger value of 200ms");
 
     while (1) {
 
