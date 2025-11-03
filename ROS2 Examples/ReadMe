@@ -1,0 +1,18 @@
+The following packages are examples of how to use ROS2 with the Copley Motion Library (CML). They can be built to create executables intended to be run by ROS2.
+
+	Example 1: copley_package: Generic ROS2 package that incorporates the CML source/header files in its cmake files. The "copley_node.cpp" file defines the entry point (main) for the application, building the copley_node executable. 
+		
+		Steps to build and run:
+		(1) Copy/paste the CML source (.cpp) and header (.h) files into the copley_package/src folder.
+		(2) Open a terminal and navigate to the ROS2 workspace folder (ros2_ws). Source your installation of ROS2 using the following line "source install/local_setup.bash".
+		(3) While still inside the ROS2 workspace, build the package using the following line "colcon build --packages-select copley_package". The copley_node executable will now be ready to run with ROS2.
+		(4) Run the executable using the following line: "ros2 run copley_package copley_node". The CAN network will be initialized and the drive with CAN node ID 1 will be initialized on the CAN network. 
+	
+	Example 2: cpp_pubsub: Generic ROS2 publisher/subscriber example edited to incorporate the CML. The talker node (publisher) creates a topic and publishes numbers (of type string) to that topic every 500 milliseconds. The listener node subscribes to that topic. It incorporates the CML to initialize a CAN network and Copley CAN drive (with node ID 1). The servo drive will make absolute trapezoidal moves to the commanded position (data published to the topic). The commanded position is multiplied by 100 so that each each move is more noticable. The commanded position is in units of raw encoder counts. 
+		
+		Steps to build and run:
+		(1) Copy/paste the CML source (.cpp) and header (.h) files into the cpp_pubsub/src folder.
+		(2) Open a terminal and navigate to the ROS2 workspace folder (ros2_ws). Source your installation of ROS2 using the following line ". install/setup.bash".
+		(3) While still inside the ROS2 workspace, build the package using the following line "colcon build --packages-select cpp_pubsub". The talker and listener executables will now be ready to run with ROS2.
+		(4) Run the listener executable using the following command: "ros2 run cpp_pubsub listener". The listener will initialize the CAN network and servo drive and wait for new data published to the topic.
+		(5) Run the talker executable using the following command: "ros2 run cpp_pubsub talker". The talker will begin publishing numbers to the topic and the listener will begin making absolute trapezoidal moves to those numbers (scaled by 100 for visibility). 
