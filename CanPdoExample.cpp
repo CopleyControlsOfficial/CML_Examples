@@ -1,6 +1,23 @@
 /*
 
-ProfileVelocityMode.cpp
+CanPdoExample.cpp
+
+The following is an example of how to map transmit and receive PDOs
+on a CAN network. This example makes a Profile Velocity move on two
+nodes at the same time and monitors actual position and actual 
+velocity over the CAN bus while the moves are in progress.
+
+On a CAN network, there are 8 TPDOs and 8 RPDOs to choose from.
+
+The CML software is using RPDO1 (making it unavailable), so this 
+example programs RPDO2. 
+
+RPDO2: Control Word (0x6040), Target Velocity (0x60FF)
+
+The CML software is using TPDO1 and TPDO2 (making them unavailable), 
+so this example programs TPDO3.
+
+TPDO3: Actual Position (0x6064), Actual Velocity (0x6069).
 
 */
 
@@ -123,10 +140,10 @@ int main(void)
         err = amp[i].PreOpNode();
         showerr(err, "Preopping node");
 
-        err = tpdo[i].Init(amp[i], 2);
+        err = tpdo[i].Init(amp[i], 2); // amp object, slot number. Slot number = PDO number. Slot 0 = TPDO1, Slot 1 = TPDO2, etc.
         showerr(err, "Initting tpdo");
 
-        err = rpdo[i].Init(amp[i], 1);
+        err = rpdo[i].Init(amp[i], 1); // amp object, slot number. Slot number = PDO number. Slot 0 = RPDO1, Slot 1 = RPDO2, etc.
         showerr(err, "Initting rpdo");
 
         err = amp[i].StartNode();
@@ -273,4 +290,5 @@ static void showerr(const Error* err, const char* str)
         printf("Error %s: %s\n", str, err->toString());
         exit(1);
     }
+
 }
