@@ -17,7 +17,8 @@ CML Features:
 -	Linkage moves up to 32 axes of coordinated motion.
 -	Control of any analog or digital I/O module compliant to the DS401 standard (Wago I/O, Copley I/O, Beckhoff EK1100, etc.).
 -	Control of any EtherCAT device, even simple ESC devices that do not support mailbox protocols (CoE).
--	PVT streaming capabilities with built-in velocity calculation for smooth motion profiles. 
+-	PVT streaming capabilities with built-in velocity calculation for smooth motion profiles.
+-	Seamless integration into the Robot Operating System (ROS2) framework.
 
 Important Settings:
 -	If using CML to command an EtherCAT network on a non real-time operating system for an extended duration, the PDO update
