@@ -9,25 +9,25 @@ In this example, one user unit will be equal to one motor revolution. To do this
 per rev of the encoder connected to the motor shaft.
 
 The CANopen Factor Group objects are listed below.
-    •	Position Encoder Increments (0x608F.1)
-    •	Position Encoder Revolutions (0x608F.2)
-    •	Gear Ratio Motor Revolutions (0x6091.1)
-    •	Gear Ratio Shaft Revolutions (0x6091.2)
-    •	Feed Constant Feed (0x6092.1)
-    •	Feed Constant Shaft Revolutions (0x6092.2)
+    â€¢	Position Encoder Increments (0x608F.1)
+    â€¢	Position Encoder Revolutions (0x608F.2)
+    â€¢	Gear Ratio Motor Revolutions (0x6091.1)
+    â€¢	Gear Ratio Shaft Revolutions (0x6091.2)
+    â€¢	Feed Constant Feed (0x6092.1)
+    â€¢	Feed Constant Shaft Revolutions (0x6092.2)
 
 CANopen objects that are affected by the CANopen Factor Groups are listed below:
 
 Sent from master to drive: 
-    •	Target Position (0x607a)
-    •	Profile Velocity (0x6081)
-    •	Profile Acceleration (0x6083)
-    •	Profile Deceleration (0x6084)
-    •	Profile Jerk (0x60A4.1)
+    â€¢	Target Position (0x607a)
+    â€¢	Profile Velocity (0x6081)
+    â€¢	Profile Acceleration (0x6083)
+    â€¢	Profile Deceleration (0x6084)
+    â€¢	Profile Jerk (0x60A4.1)
 
 Sent from drive to master: 
-    •	Actual Position (0x6064)
-    •	Actual Velocity (0x606C)
+    â€¢	Actual Position (0x6064)
+    â€¢	Actual Velocity (0x606C)
 
 The Actual Position (0x6064) is scaled using the factor group objects using the equation below:
 
@@ -41,8 +41,8 @@ All the factor group objects default to a value of 1, so by default, the Positio
 In this example, one rev was equal to 131,072 encoder counts. 
 
 To set the user units in terms of motor revolutions instead of counts, simply set the position encoder resolution using CANopen object 0x608F.
-    •	Position Encoder Increments (0x608F.1) = 131,072
-    •	Position Encoder Revolutions (0x608F.2) = 1
+    â€¢	Position Encoder Increments (0x608F.1) = 131,072
+    â€¢	Position Encoder Revolutions (0x608F.2) = 1
 
 These settings yield this calculation being performed by the Copley firmware to calculate actual position in user-defined units:
 Position actual value (user units) = ( position internal value in counts * (1 / 1) )  /  (  (131,072 / 1) * (1 / 1)  ) )
@@ -90,7 +90,7 @@ static void showerr(const Error* err, const char* str);
 
 /* local data */
 int32 canBPS = 1000000;             // CAN network bit rate
-int16 canNodeID = 2;                // CANopen node ID
+int16 canNodeID = 1;                // CANopen node ID
 
 /**************************************************
 * Just home the motor and do a bunch of random
@@ -234,4 +234,5 @@ static void showerr(const Error* err, const char* str)
         printf("Error %s: %s\n", str, err->toString());
         exit(1);
     }
+
 }
