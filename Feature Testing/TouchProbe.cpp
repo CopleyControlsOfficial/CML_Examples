@@ -40,7 +40,7 @@ static void showerr(const Error* err, const char* str);
 
 /* local data */
 int32 canBPS = 1000000;             // CAN network bit rate
-int16 canNodeID = 2;                // CANopen node ID
+int16 canNodeID = 1;                // CANopen node ID
 
 /**************************************************
 * Just home the motor and do a bunch of random
@@ -147,4 +147,5 @@ static void showerr(const Error* err, const char* str)
         printf("Error %s: %s\n", str, err->toString());
         exit(1);
     }
+
 }
