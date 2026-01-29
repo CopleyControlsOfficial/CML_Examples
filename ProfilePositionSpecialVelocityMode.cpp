@@ -295,7 +295,7 @@ const Error* TpdoActVelActPos::Init(Amp& amp, int slotNumber, int inputMask)
     globalMask = inputMask;
 
     // Initialize the transmit PDO
-    uint32 canMessageId = 0x280 + slotNumber * 0x100 + amp.GetNodeID();
+    uint32 canMessageId = 0x180 + (slotNumber * 0x100) + amp.GetNodeID();
     const Error* err = TPDO::Init(canMessageId);
 
 #ifdef USE_CAN
@@ -451,3 +451,4 @@ static void showerr(const Error* err, const char* str)
         exit(1);
     }
 }
+
