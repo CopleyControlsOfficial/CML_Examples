@@ -2,8 +2,8 @@
 
 PvtFromCsvFile.cpp
 
-The following is an example of how to load PVT points from a CSV file. 
-The points are for a three axis network connected in a linkage. 
+The following is an example of how to load PVT points from a CSV file.
+The points are for a three axis network connected in a linkage.
 
 The commanded position data for each axis is stored in an CSV file
 named "XyzPoints.csv."
@@ -11,20 +11,20 @@ named "XyzPoints.csv."
 The first row of the CSV file contains the names of each axis.
 Example of CSV contents:
 
-Axis A Positions, Axis B Positions, Axis C Positions
-      100       ,      150        ,       100
-      200       ,      250        ,       100
-      230       ,      250        ,       200
-      250       ,      250        ,       250
-      250       ,      250        ,       250
-      300       ,      256        ,       289
-      300       ,      300        ,       300
+Time, Axis A Positions, Axis B Positions, Axis C Positions
+250 ,	  100         ,      150        ,       100
+200 ,	  200         ,      250        ,       100
+200 ,	  230         ,      250        ,       200
+250 ,	  250         ,      250        ,       250
+250 ,	  250         ,      250        ,       250
+200 ,	  300         ,      256        ,       289
+200 ,	  300         ,      300        ,       300
 
 The PVT linkage will attempt to achieve these commanded positions
 using a PVT algorithm in the PvtConstAccelTrj class.
 
-The algorithm calculates velocities which will produce continuous 
-accel/decel values. The velocities are calculated using the 
+The algorithm calculates velocities which will produce continuous
+accel/decel values. The velocities are calculated using the
 positions in the CSV file and the time between each PVT point.
 
 */
@@ -64,31 +64,28 @@ int32 canBPS = 1000000;             // CAN network bit rate
 int16 canNodeID = 1;                // CANopen node ID
 
 // the number of axes in the move.
-int axisNum{ 3 };
-
-// Time between PVT Points
-uint8 timeBetweenPoints = 10; // 10ms between points
+const int axisNum = 3;
 
 using namespace std;
 
 // load the PVT data from the passed CSV file into the PvtConstAccelTrj class.
 void loadPvtPointsFromFile(PvtConstAccelTrj& pvtConstTrjObj, const char* inputExcelFile) {
-	try {
+	try 
+	{
 		ifstream ifstrObj;
-		string xPos{ NULL };
-		string yPos{ NULL };
-		string zPos{ NULL };
 
 		const Error* err{ 0 };
-		vector<double> tempVec = { 0.0, 0.0, 0.0 };
+		uint8 timeValue = 0;
+		vector<double> tempVec;
+		
+		// initialize the temporary position vector with 0.0 for each axis
+		for (int i = 0; i < axisNum; i++) 
+		{
+			tempVec.push_back(0.0);
+		}
+
 		vector<double>* tempVecPntr = &tempVec;
-
-		vector<double> xPosVec;
-		vector<double> yPosVec;
-		vector<double> zPosVec;
-
-		vector<uint8> constantTimeVec;
-		constantTimeVec.push_back(timeBetweenPoints);
+		uint8 time = 0;
 
 		ifstrObj.open(inputExcelFile);
 
@@ -100,32 +97,45 @@ void loadPvtPointsFromFile(PvtConstAccelTrj& pvtConstTrjObj, const char* inputEx
 				// get a line of data from the excel file.
 				getline(ifstrObj, lineOfData);
 
-				// ignore first row, which is just the title row. (X Coordinate, Y Coordinate, Z Coordinate, Time).
-				if (count != 0) {
-					
+				// ignore first row, which is just the title row. (Time, X Coordinate, Y Coordinate, Z Coordinate).
+				if (count != 0) 
+				{
 					vector<string> allNumsVec;
 					string tempStr;
 					stringstream strStream(lineOfData);
 
-					if (lineOfData != "") {
-						// seperate the line using the commas. The string looks like "1034,120345,123"
-						while (getline(strStream, tempStr, ',')) {
+					if (lineOfData != "") 
+					{
+						// seperate the line using the commas. The string looks like "250,1034,120345,123" which is [time, pos1, pos2, pos3]
+						while (getline(strStream, tempStr, ',')) 
+						{
 							allNumsVec.push_back(tempStr);
 						}
 
+						// use the stoi method to convert from string to int type
+						time = std::stoi(allNumsVec[0]);
+
+						printf("Time: %d ; ", time);
+						printf("Position: ");
+
 						// use the stod method to convert string to double type.
-						tempVec[0] = std::stod(allNumsVec[0]);
-						tempVec[1] = std::stod(allNumsVec[1]);
-						tempVec[2] = std::stod(allNumsVec[2]);
+						for (int i = 0; i < axisNum; i++) 
+						{
+							tempVec[i] = std::stod(allNumsVec[i+1]);
+							printf("%f, ", tempVec[i]);
+						}
+
+						printf("\n");
 
 						// add the PVT point to the PvtConstAccelTrj object.
-						err = pvtConstTrjObj.addPvtPoint(tempVecPntr, &constantTimeVec[0]);
+						err = pvtConstTrjObj.addPvtPoint(tempVecPntr, &time);
 						showerr(err, "adding points to the PVT object");
 					}
 				}
 
 				// used to ignore first row. (Title header)
-				else {
+				else 
+				{
 					count = 1;
 				}
 			}
@@ -172,30 +182,18 @@ int main(void)
 	showerr(err, "Opening network");
 
 	// Initialize the amplifiers using default settings
-	Amp amp[3];
-	AmpSettings amp_settings;
+	Amp ampArray[axisNum];
 
-	// How to set the guard time. Guard time is 200ms by default.
-	amp_settings.guardTime = 0; // set guardtime to 0 to disable Node Guarding.
-
-	// ME3 synchPeriod is 2000 ms (2 seconds)
-	//amp_settings.synchPeriod = 2000;
-
-	printf("Initing Node %d\n", 1);
-	err = amp[0].Init(net, 1, amp_settings);
-	showerr(err, "Initing Node 1");
-
-	printf("Initing Node %d\n", 2);
-	err = amp[1].Init(net, 2, amp_settings);
-	showerr(err, "Initing Node 2");
-
-	printf("Initing Node %d\n", 3);
-	err = amp[2].Init(net, 3, amp_settings);
-	showerr(err, "Initing Node 3");
+	for (int i = 0; i < axisNum; i++) 
+	{
+		printf("Initing Node %d\n", i+1);
+		err = ampArray[i].Init(net, i+1);
+		showerr(err, "Initializing node");
+	}
 
 	// Create a linkage object holding these amps
 	Linkage link;
-	err = link.Init(3, amp);
+	err = link.Init(axisNum, ampArray);
 	showerr(err, "Linkage init");
 
 	double pathMaxVel{ 160000 };
@@ -203,7 +201,10 @@ int main(void)
 	double pathMaxDecel{ 960000 };
 	double pathMaxJerk{ 200000 };
 
-	// set the limits for the linkage object
+	// Set the limits for the linkage object. 
+	// These trajectory limits are used when using the Linkage::MoveTo method.
+	// WARNING: These move limits are ignored when using the PvtConstAccelTrj or PvtTrj classes. 
+	// This is because the PvtConstAccelTrj and PvtTrj classes generate the trajectory.
 	err = link.SetMoveLimits(pathMaxVel, pathMaxAccel, pathMaxDecel, pathMaxJerk); showerr(err, "Setting Linkage Move Limits");
 
 	// create an instance of the PvtConstAccelTrj class.
@@ -220,14 +221,19 @@ int main(void)
 		cin >> numberOfCycles;
 
 		for (int i = 0; i < numberOfCycles; i++) {
-			
+
 			loadPvtPointsFromFile(pvtConstTrjObj, "XyzPoints.csv");
 
-			Point<3> startingPoint;
+			Point<axisNum> startingPoint;
 			vector<list<double>>* posPntr = pvtConstTrjObj.getPositionsPntr();
-			startingPoint[0] = (*posPntr)[0].front();
-			startingPoint[1] = (*posPntr)[1].front();
-			startingPoint[2] = (*posPntr)[2].front();
+
+			// extract the starting position
+			for (int j = 0; j < axisNum; j++) 
+			{
+				startingPoint[j] = (*posPntr)[j].front();
+			}
+
+			// move to the starting position
 			link.MoveTo(startingPoint);
 			link.WaitMoveDone(-1);
 
@@ -246,7 +252,7 @@ int main(void)
 	getchar();
 
 	return 0;
-	
+
 }
 
 static void showerr(const Error* err, const char* str)
