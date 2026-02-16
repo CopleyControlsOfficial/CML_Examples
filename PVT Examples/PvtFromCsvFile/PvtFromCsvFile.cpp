@@ -235,16 +235,19 @@ int main(void)
 
 			// move to the starting position
 			link.MoveTo(startingPoint);
+			showerr(err, "moving to the starting position (first PVT point)");
 			link.WaitMoveDone(-1);
+			showerr(err, "waiting for the move to the starting position to finish");
 
 			printf("Sending trajectory to drives\n");
 
 			// send the trajectory to the linkage.
 			err = link.SendTrajectory(pvtConstTrjObj);
-			showerr(err, "sending trajectory");
+			showerr(err, "starting PVT move");
 
 			// Set to -1 to wait indefinitely.
 			err = link.WaitMoveDone(-1);
+			showerr(err, "waiting for the PVT move to finish");
 		}
 	}
 
@@ -263,3 +266,4 @@ static void showerr(const Error* err, const char* str)
 		exit(1);
 	}
 }
+
