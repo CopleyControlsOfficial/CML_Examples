@@ -205,7 +205,8 @@ int main(void)
 	// These trajectory limits are used when using the Linkage::MoveTo method.
 	// WARNING: These move limits are ignored when using the PvtConstAccelTrj or PvtTrj classes. 
 	// This is because the PvtConstAccelTrj and PvtTrj classes generate the trajectory.
-	err = link.SetMoveLimits(pathMaxVel, pathMaxAccel, pathMaxDecel, pathMaxJerk); showerr(err, "Setting Linkage Move Limits");
+	err = link.SetMoveLimits(pathMaxVel, pathMaxAccel, pathMaxDecel, pathMaxJerk);
+	showerr(err, "Setting trajectory limits for the linkage class");
 
 	// create an instance of the PvtConstAccelTrj class.
 	PvtConstAccelTrj pvtConstTrjObj;
@@ -266,4 +267,5 @@ static void showerr(const Error* err, const char* str)
 		exit(1);
 	}
 }
+
 
