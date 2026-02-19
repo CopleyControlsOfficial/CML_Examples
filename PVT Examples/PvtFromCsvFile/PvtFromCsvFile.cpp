@@ -235,9 +235,9 @@ int main(void)
 			}
 
 			// move to the starting position
-			link.MoveTo(startingPoint);
+			err = link.MoveTo(startingPoint);
 			showerr(err, "moving to the starting position (first PVT point)");
-			link.WaitMoveDone(-1);
+			err = link.WaitMoveDone(-1);
 			showerr(err, "waiting for the move to the starting position to finish");
 
 			printf("Sending trajectory to drives\n");
@@ -267,5 +267,6 @@ static void showerr(const Error* err, const char* str)
 		exit(1);
 	}
 }
+
 
 
