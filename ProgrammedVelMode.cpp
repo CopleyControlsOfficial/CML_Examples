@@ -216,7 +216,7 @@ const Error* TpdoActVelActPos::Init(Amp& amp, int slotNumber, int inputMask)
     globalMask = inputMask;
 
     // Initialize the transmit PDO
-    const Error* err = TPDO::Init(0x280 + slotNumber * 0x100 + amp.GetNodeID());
+    const Error* err = TPDO::Init(0x180 + slotNumber * 0x100 + amp.GetNodeID());
 
 #ifdef USE_CAN
     // Set transmit type to transmit every 10th SYNC pulse
@@ -300,4 +300,5 @@ static void showerr(const Error* err, const char* str)
         printf("Error %s: %s\n", str, err->toString());
         exit(1);
     }
+
 }
