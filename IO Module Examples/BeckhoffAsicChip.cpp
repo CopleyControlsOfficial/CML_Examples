@@ -11,7 +11,7 @@ the ASIC chip.
 EtherCAT::NodeRead sends an FPRD datagram over EtherCAT to write to a node given its Node ID.
 EtherCAT::NodeWrite sends an FPWR datagram over EtherCAT to write to a node given its Node ID.
 
-To use these two methods, simply move them from "private" to "public" in the EtherCAT class. 
+To use these two methods, simply move them from "private" to "public" in the EtherCAT class.
 
 */
 
@@ -40,7 +40,7 @@ static void showerr(const Error* err, const char* str);
 /* local data */
 int16 etherCatNodeID = 1002;        // EtherCAT node ID
 
-class BeckhoffAsicChip : public Node{};
+class BeckhoffAsicChip : public Node {};
 
 int main(void)
 {
@@ -85,8 +85,18 @@ int main(void)
     // individually set each output one at a time in an endless loop
     while (1)
     {
-        err = net.NodeWrite(&beckhoffIoModule, 0x0f02, 2, outputVal);
-        showerr(err, "setting outputs");
+        // SM2 is configured in 3-buffer mode (ctrl=0x44, bits[1:0]=00).
+        // The Beckhoff ESC rotates its write slot pointer on each FPWR to
+        // the SM start address. Writing once only updates one of the three
+        // internal buffer slots; the PDI may be reading from either of the
+        // other two. After 3 writes all slots are current, guaranteeing
+        // the PDI sees the new value on its next read cycle regardless of
+        // which slot it reads from.
+        for (int i = 0; i < 3; i++) 
+        {
+            err = net.NodeWrite(&beckhoffIoModule, 0x0f02, 2, outputVal);
+            showerr(err, "setting outputs");
+        }
 
         uint8 inputPinStates[2];
         err = net.NodeRead(&beckhoffIoModule, 0x1000, 2, inputPinStates);
