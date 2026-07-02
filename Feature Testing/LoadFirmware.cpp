@@ -2,7 +2,8 @@
 
 LoadFirmware.cpp
 
-Simple example of how to load firmware over CAN.
+Simple example of how to load firmware over CAN or EtherCAT. 
+Provide the path to the file in the LoadFirmwareFromFile method. 
 
 */
 
@@ -13,9 +14,6 @@ Simple example of how to load firmware over CAN.
 #include <cstdlib>
 #include <iostream>
 #include "CML.h"
-
-using std::cout;
-using std::endl;
 
 #if defined( USE_CAN )
 #include "can/can_copley.h"
@@ -81,12 +79,8 @@ int main(void)
     err = amp.Init(net, canNodeID, ampSettings);
     showerr(err, "Initting amp");
 
-    Firmware file;
-    err = file.Load("ARM_Can_2.28.cff");
-    showerr(err, "creating firmware file object");
-
-    err = amp.FirmwareUpdate(file);;
-    showerr(err, "updating ADP ARM drive firmware");
+    err = amp.LoadFirmwareFromFile("ARM_Can_2.28.cff", net);
+    showerr(err, "updating drive firmware");
 
     return 0;
 }
