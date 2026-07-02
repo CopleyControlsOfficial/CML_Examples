@@ -1,6 +1,19 @@
 /** \file
 
-Simple example of reading the drive name, model number, and firmware version.
+Simple example of reading the drive name, model number, and firmware version. 
+
+This example also sets the input shaping filter (ASCII ID 0x184) in RAM and then 
+reads it back out of the drive. The input shaping filter configuration in CME was
+"Zero Vibration and Derivative" with Frequency = 0.5 Hz and Damping Ratio = 0. 
+The filter values may be different on your drive, so please follow the recommended 
+steps below before applying this filter configuration on your drive.
+
+Determine the correct input shaping filter values to send.
+ - Connect to the drive over serial using CME. 
+ - Open the Configure Filters Button. Click on the "Input Shaping" tab. Configure 
+   the filter.
+ - Open "Tools" -> "ASCII Command Line". Send this ASCII string to read the input 
+   shaping filter configuration from the drive's RAM: "g r0x184 x".
 
 */
 
@@ -17,7 +30,7 @@ Simple example of reading the drive name, model number, and firmware version.
 using std::hex;
 using std::cout;
 using std::endl;
-using std::string; 
+using std::string;
 using std::ostringstream;
 
 #if defined( USE_CAN )
@@ -111,7 +124,7 @@ int main(void)
 
     // 0x0c is the "read parameter" op-code. 
     // ASCII parameter is 0x92 "Drive Name." Bit 15 is set, meaning read from flash memory, so 0x92 becomes 0x1092. 
-    byte getDriveNameCommand[3] = { 0x0c, 0x92, 0x10 }; 
+    byte getDriveNameCommand[3] = { 0x0c, 0x92, 0x10 };
     err = amp.Download(index, subIndex, size, getDriveNameCommand);
     showerr(err, "requesting to read the drive name in Flash memory.");
 
@@ -132,7 +145,7 @@ int main(void)
     vector<char> driveNameCharVec = GetAsciiCharactersFromByteArray(driveName, sizeNew);
 
     printf("Drive Name: ");
-    for (int i = 0; i < driveNameCharVec.size(); i++) {        
+    for (int i = 0; i < driveNameCharVec.size(); i++) {
         printf("%c", driveNameCharVec[i]);
     }
     printf("\n");
@@ -168,7 +181,7 @@ int main(void)
     short firmwareVersion = 0;
     err = amp.sdo.Upld16(index, subIndex, firmwareVersion);
     showerr(err, "reading the firmware version from the drive");
-    
+
     int firmwareInt = firmwareVersion;
 
     // use an ostringstream object with a hex manipulator to convert int to hex string.
@@ -181,8 +194,81 @@ int main(void)
     firmwareVersionStr.insert(firmwareVersionStr.size() - 2, decimal);
     cout << "Firmware Version: " << firmwareVersionStr << std::endl;
 
-    getchar();
+    // How to read/write the input shaping filter (ASCII ID 0x184) over the network. 
+    // Step 1: Determine the values to send.
+    //  - Connect to the drive over serial using CME. 
+    //  - Open the Configure Filters Button. Click on the "Input Shaping" tab. Configure the filter.
+    //  - Open "Tools" -> "ASCII Command Line". Send this ASCII string to read the input shaping filter configuration from the drive's RAM: "g r0x184 x".
+    // Step 2: Send those values using the code below. 
+    // 
 
+    // I used CME to read the value of 0x184 using the ASCII Command Line: "g r0x184 x"
+    // The values that came back are: 
+    // 0x00000002 0x3f000000 0x00000000 0x00000002 0x00000000 0x3e800000 0x3f800000 0x3f000000 0x40000000 0x3e800000
+    byte newInputShapingFilterConfig[43] = 
+    {
+        0x0d, // 0x0d is the "set parameter" op-code
+        0x84, 0x01, // 0x0184 is the ASCII ID for the input shaping filter parameter
+        0x00, 0x00, 0x02, 0x00, // 0x00000002
+        0x00, 0x3f, 0x00, 0x00, // 0x0000003f
+        0x00, 0x00, 0x00, 0x00, // 0x00000000
+        0x00, 0x00, 0x02, 0x00, // 0x00000002
+        0x00, 0x00, 0x00, 0x00, // 0x00000000
+        0x80, 0x3e, 0x00, 0x00, // 0x3e800000
+        0x80, 0x3f, 0x00, 0x00, // 0x3f800000
+        0x00, 0x3f, 0x00, 0x00, // 0x3f000000
+        0x00, 0x40, 0x00, 0x00, // 0x40000000
+        0x80, 0x3e, 0x00, 0x00, // 0x3e800000
+    };
+
+    index = 0x2000; // serial-binary interface
+    subIndex = 0;
+    size = 43; // number of bytes to send in this serial-binary message.
+    err = amp.Download(index, subIndex, size, newInputShapingFilterConfig);
+    showerr(err, "requesting to set the input shaping filter configuration.");
+
+    byte response[1];
+    size = 1;
+    err = amp.Upload(index, subIndex, size, response);
+    showerr(err, "reading the serial-binary interface response to the set command");
+
+    // first byte is error byte indicating whether or not there was a problem performing the last serial-binary command.
+    if (response[0] != 0)
+    {
+        printf("Error setting input shaping filter!\n");
+        return -1;
+    }
+
+    byte getFilterCommand[3] =
+    {
+        0x0c, // 0x0c is the "read parameter" op-code. 
+        0x84, 0x01 // 0x0184 is the ASCII ID for the input shaping filter parameter
+    };
+
+    size = 3;
+    err = amp.Download(index, subIndex, size, getFilterCommand);
+    showerr(err, "requesting to read the input shaping filter.");
+
+    byte inputShapingFilter[100];
+    int filterSize = 100;
+    // please note: filterSize is passed by reference and is overwritten by the upload method to the number of bytes retrieved.
+    err = amp.sdo.Upload(index, subIndex, filterSize, inputShapingFilter);
+    showerr(err, "reading the serial-binary interface");
+
+    // first byte is error byte indicating whether or not there was a problem reading the drive name
+    if (inputShapingFilter[0] != 0)
+    {
+        printf("Error reading input shaping filter!\n");
+        return -1;
+    }
+
+    printf("Filter Data: ");
+    for (int i = 1; i < filterSize; i++)
+    {
+        printf("%d ", inputShapingFilter[i]);
+    }
+
+    printf("\n");
     return 0;
 }
 
@@ -196,4 +282,3 @@ static void showerr(const Error* err, const char* str)
         exit(1);
     }
 }
-
