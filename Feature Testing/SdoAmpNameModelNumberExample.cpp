@@ -255,7 +255,7 @@ int main(void)
     err = amp.sdo.Upload(index, subIndex, filterSize, inputShapingFilter);
     showerr(err, "reading the serial-binary interface");
 
-    // first byte is error byte indicating whether or not there was a problem reading the drive name
+    // first byte is error byte indicating whether or not there was a problem reading the input shaping filter configuration.
     if (inputShapingFilter[0] != 0)
     {
         printf("Error reading input shaping filter!\n");
