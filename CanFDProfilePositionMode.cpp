@@ -2,7 +2,7 @@
 
 CanFDProfilePositionMode.cpp
 
-Dual-axis trapezoidal (Profile Position) moves over CAN-FD.
+Multi-axis trapezoidal (Profile Position) moves over CAN-FD.
 
 This example is a CAN-FD version of ProfilePositionMode.cpp.  It does two things
 that a classic CAN example cannot do:
@@ -56,7 +56,6 @@ that a classic CAN example cannot do:
   Each move waits for both axes to arrive before the next one is commanded, and
   the arrival is checked against the commanded target.  See WaitForMoves()
   below for why waiting takes two steps rather than a bare WaitMoveDone().
-
 
   ---------------------------------------------------------------------------
   BEFORE YOU RUN THIS: enable CAN-FD on the drive first
@@ -375,7 +374,7 @@ The actual CAN-FD demonstration: dual-axis trapezoidal moves driven by one
 /***************************************************************************/
 static int RunCanFdMove(void)
 {
-    printf("--- Dual-axis Profile Position over CAN-FD ---\n\n");
+    printf("--- Multi-axis Profile Position over CAN-FD ---\n\n");
 
     // Everything that talks to the network lives in this one scope, declared
     // in dependency order.  C++ destroys locals in reverse order of
