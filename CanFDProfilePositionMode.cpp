@@ -349,7 +349,7 @@ static const Error* WaitForMoves(Amp amp[], int axisCt, uint32 elapsed[],
 
 /***************************************************************************/
 /**
-Program entry point. Run the dual-axis CAN-FD move.
+Program entry point. Run the multi-axis CAN-FD move.
 */
 /***************************************************************************/
 int main(void)
@@ -368,7 +368,7 @@ int main(void)
 
 /***************************************************************************/
 /**
-The actual CAN-FD demonstration: dual-axis trapezoidal moves driven by one
+The actual CAN-FD demonstration: multi-axis trapezoidal moves driven by one
 20 byte RPDO per axis, with a 12 byte status TPDO coming back.
 */
 /***************************************************************************/
