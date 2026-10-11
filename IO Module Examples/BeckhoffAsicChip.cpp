@@ -1,6 +1,6 @@
 /*
 
-BeckhoffAsicChipPdo.cpp
+BeckhoffAsicChip.cpp
 
 Drive a non-CoE EtherCAT I/O module through PDOs, so the cycle thread
 carries its process data at the cycle rate.
