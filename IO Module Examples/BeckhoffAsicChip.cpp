@@ -352,8 +352,7 @@ int main(void)
             else                     var16[i].Write((int16)val);
 
             /* THE PUBLISH.  Without this the frame keeps carrying whatever
-               the Pmap held when the PDO was mapped - which is zero, and is
-               why the first version of this file lit nothing. */
+               the Pmap held when the PDO was mapped - which is zero */
             err = rpdo[i].Transmit(net);
             showerr(err, "publishing an output PDO");
 
