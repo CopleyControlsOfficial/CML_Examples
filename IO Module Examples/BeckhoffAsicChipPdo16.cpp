@@ -20,11 +20,6 @@ a two-byte image.
 
 Requires CML 2.20.03 or later.
 
-Build (Linux):
-    g++ -O1 -g -I inc -I inc/can -I inc/ecat -I inc/pugixml \
-        -o BeckhoffAsicChipPdo16 BeckhoffAsicChipPdo16.cpp \
-        libMotionLib.a -lpthread -lrt -ldl
-
 */
 
 #include <cstdio>
